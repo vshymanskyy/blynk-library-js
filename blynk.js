@@ -277,13 +277,12 @@ var BoardEspruino = function(values) {
  */
 
 var Blynk = function(auth, options) {
-  var self = this;
   if (!isEspruino()) {
     events.EventEmitter.call(this);
   }
 
-  var options = options || {};
   this.auth = auth;
+  var options = options || {};
   this.heartbeat = options.heartbeat || (10*1000);
   
   // Auto-detect board
@@ -306,8 +305,18 @@ var Blynk = function(auth, options) {
 
   this.buff_in = '';
   this.msg_id = 1;
+  
+  if (!options.skip_connect) {
+    this.connect();
+  }
+};
 
-  this._onReceive = function(data) {
+if (!isEspruino()) {
+  util.inherits(Blynk, events.EventEmitter);
+}
+
+  Blynk.prototype.onReceive = function(data) {
+    var self = this;
     //if (isEspruino()) {
     //  self.buff_in += data;
     //} else {
@@ -320,7 +329,7 @@ var Blynk = function(auth, options) {
 
       //console.log('d> ', data.toString('hex'));
       //console.log('i> ', new Buffer(self.buff_in, 'binary').toString('hex'));
-      console.log('> ', msg_type, msg_id, msg_len);
+      //console.log('> ', msg_type, msg_id, msg_len);
 
       if (msg_id === 0)  { return self.disconnect(); }
       var consumed = 5;
@@ -333,7 +342,7 @@ var Blynk = function(auth, options) {
             console.log('Heartbeat');
             self.sendMsg(MsgType.PING, null);
           }, self.heartbeat);
-          self.emit('connect');
+          self.emit('connected');
         }
       } else if (msg_type === MsgType.PING) {
         self.conn.write(blynkHeader(MsgType.RSP, msg_id, MsgStatus.OK));
@@ -347,7 +356,7 @@ var Blynk = function(auth, options) {
         var values = self.buff_in.substr(5, msg_len).split('\0');
         consumed += msg_len;
 
-        console.log('> ', values);
+        //console.log('> ', values);
 
         if (values[0] === 'vw') {
           self.emit('virtual', {
@@ -365,23 +374,27 @@ var Blynk = function(auth, options) {
         } else {
           console.log('Invalid cmd: ', values[0]);
         }
+      } else {
+        console.log('Invalid msg type: ', msg_type);
       }
       self.buff_in = self.buff_in.substr(consumed);
     } // end while
   };
 
-  this.sendMsg = function(msg_type, msg_id, values) {
+  Blynk.prototype.sendMsg = function(msg_type, msg_id, values) {
+    var self = this;
     values = values || [''];
     msg_id = msg_id || (self.msg_id++);
     var data = values.join('\0');
     var msg_len = data.length;
     self.conn.write(blynkHeader(msg_type, msg_id, msg_len) + data);
-    console.log('< ', msg_type, msg_id, msg_len, ' : ', values);
+    //console.log('< ', msg_type, msg_id, msg_len, ' : ', values);
 
     // TODO: track also recieving time
     if (self.timerHb) {
       clearInterval(self.timerHb);
       self.timerHb = setInterval(function(){
+        console.log('Heartbeat');
         self.sendMsg(MsgType.PING, null);
       }, self.heartbeat);
     }
@@ -391,57 +404,42 @@ var Blynk = function(auth, options) {
    * API
    */
 
-  this.connect = function() {
+  Blynk.prototype.connect = function() {
+    var self = this;
     self.disconnect();
     self.timerConn = setInterval(function() {
       self.conn.connect(function() {
-        self.conn.removeAllListeners('data');
-        self.conn.on('data', self._onReceive);
+        self.conn.on('data', function(data) { self.onReceive(data); });
+        self.conn.on('end',  function()     { self.disconnect();    });
         self.sendMsg(MsgType.LOGIN, 1, [self.auth]);
       });
     }, 5000);
   };
 
-  this.disconnect = function() {
-    self.conn.disconnect();
-    self.emit('disconnect');
+  Blynk.prototype.disconnect = function() {
+    this.conn.disconnect();
+    clearInterval(this.timerHb);
+    this.emit('disconnected');
   };
 
-  this.virtualWrite = function(pin , value) {
-    self.sendMsg(MsgType.HW, null, ['vw', pin, value]);
+  Blynk.prototype.virtualWrite = function(pin , value) {
+    this.sendMsg(MsgType.HW, null, ['vw', pin, value]);
   };
 
-  this.email = function(to, topic, message) {
-    self.sendMsg(MsgType.EMAIL, null, [to, topic, message]);
+  Blynk.prototype.email = function(to, topic, message) {
+    this.sendMsg(MsgType.EMAIL, null, [to, topic, message]);
   };
 
-  this.notify = function(message) {
-    self.sendMsg(MsgType.NOTIFY, null, [message]);
+  Blynk.prototype.notify = function(message) {
+    this.sendMsg(MsgType.NOTIFY, null, [message]);
   };
 
-  this.tweet = function(message) {
-    self.sendMsg(MsgType.TWEET, null, [message]);
+  Blynk.prototype.tweet = function(message) {
+    this.sendMsg(MsgType.TWEET, null, [message]);
   };
-};
 
-if (!isEspruino()) {
-  util.inherits(Blynk, events.EventEmitter);
-}
 
-function startBlynk() {
-  var blynk = new Blynk('7736215262c242c1989a1e262fbbcb19');
-  blynk.connect();
-
-  blynk.on('virtual', function(param){
-    console.log('VIRTUAL:', param);
-  });
-
-  blynk.on('connect', function(){
-    setInterval(function() {
-      blynk.virtualWrite(9, (new Date()).getSeconds());
-    }, 1000);
-  });
-
-}
-
-startBlynk();
+exports.Blynk = Blynk;
+exports.TcpClient = BlynkTcpClient;
+exports.SslClient = BlynkSslClient;
+exports.EspruinoSerial = BlynkSslClient;
