@@ -28,3 +28,12 @@ v9.on('read', function() {
 ## Boards with supported direct pin IO:
 * Espruino
 * Raspberry Pi/Beaglebone using [onoff](https://www.npmjs.com/package/onoff) package
+
+## Espruino
+To test this with the Espruino, you can try this:
+```js
+var Blynk = require('http://tiny.cc/blynk-js')
+```
+It will automatically detect Espruino and try connecting to Blynk over default USB.
+
+**Warning: it will move console to Serial1! Don't try this if you don't know how to switch it back!**
