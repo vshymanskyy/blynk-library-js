@@ -1,0 +1,42 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <title>Blynk test</title>
+  <meta name="description" content="">
+  <meta name="author" content="Volodymyr Shymanskyy">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+</head>
+
+<body>
+  <script src="blynk-browser.js"></script>
+  <script src="blynk.js"></script>
+  <script type="text/javascript">
+
+    var onInit = function() {
+      var blynk = new Blynk('715f8caae9bf4a91bae319d0376caa8d');
+
+      var v1 = new blynk.VirtualPin(1);
+      var v9 = new blynk.VirtualPin(9);
+
+      v1.on('write', function(param) {
+        alert('V1:' + param);
+      });
+
+      v9.on('read', function() {
+        v9.write(new Date().getSeconds());
+      });
+
+      blynk.on('connected', function() { alert("Blynk ready."); });
+      blynk.on('disconnected', function() { alert("DISCONNECT"); });
+    };
+
+    window.addEventListener("load", onInit, false);
+  </script>
+</body>
+</html>

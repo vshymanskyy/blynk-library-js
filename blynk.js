@@ -3,8 +3,24 @@
  */
 
 function isEspruino() {
-  return typeof process.env.BOARD !== 'undefined';
+  if (typeof process === 'undefined') return false;
+  if (typeof process.env.BOARD === 'undefined') return false;
+  return true;
 }
+
+function isNode() {
+  return (typeof module !== "undefined" && ('exports' in module));
+}
+
+function isBrowser() {
+  return (typeof window !== 'undefined');
+}
+
+function needsEmitter() {
+  return (!isEspruino() && isNode());
+}
+
+//function require(module) { return undefined; }
 
 function blynkHeader(msg_type, msg_id, msg_len) {
   return String.fromCharCode(
@@ -35,161 +51,45 @@ var BlynkState = {
   DISCONNECTED  :  3,
 };
 
-
-if (!isEspruino()) {
+if (isNode()) {
+  var bl_node = require('./blynk-node.js');
   var events = require('events');
   var util = require('util');
 }
 
 /*
- * TCP Client
- */
-
-var BlynkTcpClient = function(options) {
-  var self = this;
-  if (!isEspruino()) {
-    events.EventEmitter.call(this);
-  }
-  var options = options || {};
-  self.addr = options.addr || "cloud.blynk.cc";
-  self.port = options.port || 8442;
-
-  var net = require('net');
-
-  this.write = function(data) {
-    if (self.sock) {
-      self.sock.write(data);
-    }
-  };
-
-  this.connect = function(done) {
-    if (self.sock) {
-      self.disconnect();
-    }
-    self.sock = new net.Socket();
-    self.sock.setNoDelay(true);
-    self.sock.connect(self.port, self.addr, function() {
-      console.log('Connected');
-      self.sock.on('data', function(data) {
-        self.emit('data', data);
-      });
-      self.sock.on('end', function(data) {
-        self.emit('end', data);
-      });
-      done();
-    });
-  };
-
-  this.disconnect = function() {
-    if (self.sock) {
-      self.sock.destroy();
-      self.sock = null;
-    }
-  };
-};
-
-if (!isEspruino()) {
-  util.inherits(BlynkTcpClient, events.EventEmitter);
-}
-
-/*
- * SSL Client
- */
-
-var BlynkSslClient = function(options) {
-  var self = this;
-  if (!isEspruino()) {
-    events.EventEmitter.call(this);
-  }
-  
-  var options = options || {};
-  self.addr = options.addr || "cloud.blynk.cc";
-  self.port = options.port || 8441;
-  // These are necessary only if using the client certificate authentication
-  self.key  = options.key  || null;
-  self.cert = options.cert || null;
-  self.pass = options.pass || null;
-  // This is necessary only if the server uses the self-signed certificate
-  self.ca   = options.ca   || [ '../certs/server.crt' ];
-  
-  var tls = require('tls');
-  var fs = require('fs');
-
-  this.write = function(data) {
-    if (self.sock) {
-      self.sock.write(data);
-    }
-  };
-
-  this.connect = function(done) {
-    if (self.sock) {
-      self.disconnect();
-    }
-
-    var opts = {};
-    if (self.key)  { opts.key  = fs.readFileSync(self.key); }
-    if (self.cert) { opts.cert = fs.readFileSync(self.cert); }
-    if (self.pass) { opts.passphrase = self.pass; }
-    if (self.ca)   { opts.ca   = self.ca.map(fs.readFileSync); }
-    
-    self.sock = tls.connect(self.port, self.addr, opts, function() {
-      console.log('Connected,', self.sock.authorized ? 'authorized' : 'unauthorized');
-      self.sock.setNoDelay(true);
-      self.sock.on('data', function(data) {
-        self.emit('data', data);
-      });
-      self.sock.on('end', function(data) {
-        self.emit('end', data);
-      });
-      done();
-    });
-  };
-
-  this.disconnect = function() {
-    if (self.sock) {
-      self.sock.destroy();
-      self.sock = null;
-    }
-  };
-};
-
-if (!isEspruino()) {
-  util.inherits(BlynkSslClient, events.EventEmitter);
-}
-
-
-/*
  * Serial
  */
+if (isEspruino()) {
+  var BlynkSerial = function(options) {
+    var self = this;
+    
+    var options = options || {};
+    self.ser  = options.serial || USB;
+    self.conser = options.conser || Serial1;
+    self.baud = options.baud || 9600;
 
-var BlynkSerial = function(options) {
-  var self = this;
-  
-  var options = options || {};
-  self.ser  = options.serial || USB;
-  self.conser = options.conser || Serial1;
-  self.baud = options.baud || 9600;
+    this.write = function(data) {
+      self.ser.write(data);
+    };
 
-  this.write = function(data) {
-    self.ser.write(data);
+    this.connect = function(done) {
+      self.ser.setup(self.baud);
+      self.ser.removeAllListeners('data');
+      self.ser.on('data', function(data) {
+        self.emit('data', data);
+      });
+      if (self.conser) {
+        self.conser.setConsole();
+      }
+      done();
+    };
+
+    this.disconnect = function() {
+      //self.ser.setConsole();
+    };
   };
-
-  this.connect = function(done) {
-    self.ser.setup(self.baud);
-    self.ser.removeAllListeners('data');
-    self.ser.on('data', function(data) {
-      self.emit('data', data);
-    });
-    if (self.conser) {
-      self.conser.setConsole();
-    }
-    done();
-  };
-
-  this.disconnect = function() {
-    //self.ser.setConsole();
-  };
-};
+}
 
 /*
  * Boards
@@ -240,44 +140,46 @@ var BoardOnOff = function() {
   };
 };
 
-var BoardEspruino = function(values) {
-  this.process = function(values) {
-    switch(values[0]) {
-      case 'info':
-        break;
-      case 'dw':
-        var pin = Pin(values[1]);
-        var val = parseInt(values[2], 10);
-        pinMode(pin, 'output');
-        digitalWrite(pin, val);
-        break;
-      case 'aw':
-        var pin = Pin(values[1]);
-        var val = parseInt(values[2], 10);
-        pinMode(pin, 'output');
-        analogWrite(pin, val);
-        break;
-      case 'dr':
-        var pin = Pin(values[1]);
-        
-        break;
-      case 'ar':
-        var pin = Pin(values[1]);
+if (isEspruino()) {
+  var BoardEspruino = function(values) {
+    this.process = function(values) {
+      switch(values[0]) {
+        case 'info':
+          break;
+        case 'dw':
+          var pin = Pin(values[1]);
+          var val = parseInt(values[2], 10);
+          pinMode(pin, 'output');
+          digitalWrite(pin, val);
+          break;
+        case 'aw':
+          var pin = Pin(values[1]);
+          var val = parseInt(values[2], 10);
+          pinMode(pin, 'output');
+          analogWrite(pin, val);
+          break;
+        case 'dr':
+          var pin = Pin(values[1]);
+          
+          break;
+        case 'ar':
+          var pin = Pin(values[1]);
 
-        break;
-      default:
-        return null;
-    }
-    return true;
+          break;
+        default:
+          return null;
+      }
+      return true;
+    };
   };
-};
+}
 
 /*
  * Blynk
  */
 
 var Blynk = function(auth, options) {
-  if (!isEspruino()) {
+  if (needsEmitter()) {
     events.EventEmitter.call(this);
   }
 
@@ -299,8 +201,10 @@ var Blynk = function(auth, options) {
     this.conn = options.connector;
   } else if (isEspruino()) {
     this.conn = new BlynkSerial(options);
+  } else if (isBrowser()) {
+    this.conn = new BlynkWebSocketClient(options);
   } else {
-    this.conn = new BlynkSslClient(options);
+    this.conn = new bl_node.BlynkSslClient(options);
   }
 
   this.buff_in = '';
@@ -313,7 +217,7 @@ var Blynk = function(auth, options) {
   
   var blynk = this;
   this.VirtualPin = function(pin) {
-    if (!isEspruino()) {
+    if (needsEmitter()) {
       events.EventEmitter.call(this);
     }
     this.blynk = blynk;
@@ -325,13 +229,17 @@ var Blynk = function(auth, options) {
     }
   };
 
-  if (!isEspruino()) {
+  if (needsEmitter()) {
     util.inherits(this.VirtualPin, events.EventEmitter);
+  } else if (isBrowser()) {
+    MicroEvent.mixin(this.VirtualPin);
   }
 };
 
-if (!isEspruino()) {
+if (needsEmitter()) {
   util.inherits(Blynk, events.EventEmitter);
+} else if (isBrowser()) {
+  MicroEvent.mixin(Blynk);
 }
 
 Blynk.prototype.onReceive = function(data) {
@@ -456,8 +364,13 @@ Blynk.prototype.tweet = function(message) {
   this.sendMsg(MsgType.TWEET, null, [message]);
 };
 
-
-exports.Blynk = Blynk;
-exports.TcpClient = BlynkTcpClient;
-exports.SslClient = BlynkSslClient;
-exports.EspruinoSerial = BlynkSslClient;
+if (typeof module !== "undefined" && ('exports' in module)) {
+  exports.Blynk = Blynk;
+  if (isNode()) {
+    exports.TcpClient = bl_node.BlynkTcpClient;
+    exports.SslClient = bl_node.BlynkSslClient;
+  }
+  if (isEspruino()) {
+    exports.EspruinoSerial = BlynkSerial;
+  }
+}
