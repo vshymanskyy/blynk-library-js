@@ -1,3 +1,5 @@
+[![NPM](https://nodei.co/npm/blynk-library.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/blynk-library/)
+
 # blynk-library-js
 Blynk library implementation for JavaScript (Node.js, Espruino)
 
