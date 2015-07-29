@@ -237,7 +237,7 @@ if (!self.profile) {
         clearInterval(self.timerConn);
         self.timerConn = null;
         self.timerHb = setInterval(function() {
-          console.log('Heartbeat');
+          //console.log('Heartbeat');
           self.sendMsg(MsgType.PING, null);
         }, self.heartbeat);
         self.emit('connected');
@@ -373,14 +373,14 @@ Blynk.prototype.tweet = function(message) {
 
 if (typeof module !== 'undefined' && ('exports' in module)) {
   exports.Blynk = Blynk;
-  if (isNode()) {
+
+  if (isEspruino()) {
+    exports.EspruinoSerial = BlynkSerial;
+  } else if (isNode()) {
     exports.TcpClient = bl_node.BlynkTcpClient;
     exports.TcpServer = bl_node.BlynkTcpServer;
     exports.SslClient = bl_node.BlynkSslClient;
     exports.SslServer = bl_node.BlynkSslServer;
     exports.BoardOnOff = bl_node.BoardOnOff;
-  }
-  if (isEspruino()) {
-    exports.EspruinoSerial = BlynkSerial;
   }
 }

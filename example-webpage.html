@@ -19,7 +19,10 @@
   <script type="text/javascript">
 
     var onInit = function() {
-      var blynk = new Blynk('715f8caae9bf4a91bae319d0376caa8d');
+      var blynk = new Blynk('715f8caae9bf4a91bae319d0376caa8d', options = {
+        addr : "blynk-qa.cloudapp.net",
+        port : 8444
+      });
 
       var v1 = new blynk.VirtualPin(1);
       var v9 = new blynk.VirtualPin(9);
