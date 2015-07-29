@@ -1,3 +1,5 @@
+/* Copyright (c) 2015 Volodymyr Shymanskyy. See the file LICENSE for copying permission. */
+
 var MicroEvent  = function(){};
 MicroEvent.prototype  = {
   on  : function(event, fct){

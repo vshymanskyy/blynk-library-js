@@ -1,3 +1,12 @@
+/* Copyright (c) 2015 Volodymyr Shymanskyy. See the file LICENSE for copying permission. */
+
+/*
+
+*/
+
+var C = {
+};
+
 /*
  * Helpers
  */
@@ -44,18 +53,18 @@ var MsgType = {
   EMAIL         :  13,
   NOTIFY        :  14,
   BRIDGE        :  15,
-  HW            :  20,
+  HW            :  20
 };
 
 var MsgStatus = {
   OK                    :  200,
-  ILLEGAL_COMMAND       :  2,
+  ILLEGAL_COMMAND       :  2
 };
 
 var BlynkState = {
   CONNECTING    :  1,
   CONNECTED     :  2,
-  DISCONNECTED  :  3,
+  DISCONNECTED  :  3
 };
 
 if (isNode()) {
