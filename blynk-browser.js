@@ -31,7 +31,7 @@ MicroEvent.mixin  = function(destObject){
   return destObject;
 }
 
-var BlynkWebSocketClient = function(options) {
+var BlynkWsClient = function(options) {
   var self = this;
   
   var options = options || {};
@@ -68,4 +68,4 @@ var BlynkWebSocketClient = function(options) {
   };
 };
 
-MicroEvent.mixin(BlynkWebSocketClient);
+MicroEvent.mixin(BlynkWsClient);

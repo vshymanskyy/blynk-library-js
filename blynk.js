@@ -37,8 +37,8 @@ var MsgType = {
   LOAD_PROF     :  4,
   GET_TOKEN     :  5,
   PING          :  6,
-  ACTIVATE      :  7, //"activate DASH_ID"
-  DEACTIVATE    :  8, //"deactivate"
+  ACTIVATE      :  7, //"DASH_ID"
+  DEACTIVATE    :  8, //
   REFRESH       :  9, //"refreshToken DASH_ID"
   TWEET         :  12,
   EMAIL         :  13,
@@ -70,7 +70,7 @@ if (isNode()) {
 if (isEspruino()) {
   var BlynkSerial = function(options) {
     var self = this;
-    
+
     var options = options || {};
     self.ser  = options.serial || USB;
     self.conser = options.conser || Serial1;
@@ -116,7 +116,7 @@ if (isEspruino()) {
           break;
         case 'dr':
           var pin = Pin(values[1]);
-          
+
           break;
         case 'ar':
           var pin = Pin(values[1]);
@@ -162,7 +162,7 @@ var Blynk = function(auth, options) {
   this.auth = auth;
   var options = options || {};
   this.heartbeat = options.heartbeat || (10*1000);
-  
+
   // Auto-detect board
   if (options.board) {
     this.board = options.board;
@@ -178,9 +178,9 @@ var Blynk = function(auth, options) {
   } else if (isEspruino()) {
     this.conn = new BlynkSerial(options);
   } else if (isBrowser()) {
-    this.conn = new BlynkWebSocketClient(options);
+    this.conn = new BlynkWsClient(options);
   } else {
-    this.conn = new bl_node.BlynkSslClient(options);
+    this.conn = new bl_node.SslClient(options);
   }
 
   this.buff_in = '';
@@ -188,10 +188,7 @@ var Blynk = function(auth, options) {
   this.vpins = [];
   this.profile = options.profile;
 
-  if (!options.skip_connect) {
-    this.connect();
-  }
-  
+
   var blynk = this;
   this.VirtualPin = function(pin) {
     if (needsEmitter()) {
@@ -203,13 +200,17 @@ var Blynk = function(auth, options) {
     
     this.write = function(value) {
       blynk.virtualWrite(this.pin, value);
-    }
+    };
   };
 
   if (needsEmitter()) {
     util.inherits(this.VirtualPin, events.EventEmitter);
   } else if (isBrowser()) {
     MicroEvent.mixin(this.VirtualPin);
+  }
+  
+  if (!options.skip_connect) {
+    this.connect();
   }
 };
 
@@ -221,7 +222,7 @@ if (needsEmitter()) {
 
 Blynk.prototype.onReceive = function(data) {
   var self = this;
-  self.buff_in += data.toString('binary');
+  self.buff_in += data;
   while (self.buff_in.length >= 5) {
     var msg_type = self.buff_in.charCodeAt(0);
     var msg_id   = self.buff_in.charCodeAt(1) << 8 | self.buff_in.charCodeAt(2);
@@ -240,7 +241,7 @@ if (!self.profile) {
           //console.log('Heartbeat');
           self.sendMsg(MsgType.PING, null);
         }, self.heartbeat);
-        self.emit('connected');
+        self.emit('connect');
       }
 }
       self.buff_in = self.buff_in.substr(5);
@@ -346,13 +347,14 @@ Blynk.prototype.connect = function() {
     doConnect();
   } else {
     self.timerConn = setInterval(doConnect, 5000);
+    doConnect();
   }
 };
 
 Blynk.prototype.disconnect = function() {
   this.conn.disconnect();
   clearInterval(this.timerHb);
-  this.emit('disconnected');
+  this.emit('disconnect');
 };
 
 Blynk.prototype.virtualWrite = function(pin, value) {
@@ -370,6 +372,7 @@ Blynk.prototype.notify = function(message) {
 Blynk.prototype.tweet = function(message) {
   this.sendMsg(MsgType.TWEET, null, [message]);
 };
+
 
 if (typeof module !== 'undefined' && ('exports' in module)) {
   exports.Blynk = Blynk;

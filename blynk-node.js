@@ -25,6 +25,7 @@ var BlynkTcpClient = function(options) {
     if (self.sock) {
       self.disconnect();
     }
+    console.log("Connecting to TCP:", self.addr, self.port);
     self.sock = new net.Socket();
     self.sock.setNoDelay(true);
     self.sock.setEncoding('binary');
@@ -85,6 +86,7 @@ var BlynkTcpServer = function(options) {
       done();
     });
 
+    console.log("TCP server:", self.addr, self.port);
     self.srvr.listen(self.port, self.addr);
   };
 
@@ -136,6 +138,7 @@ var BlynkSslClient = function(options) {
     if (self.pass) { opts.passphrase = self.pass; }
     if (self.ca)   { opts.ca   = self.ca.map(fs.readFileSync); }
     
+    console.log("Connecting to SSL:", self.addr, self.port);
     self.sock = tls.connect(self.port, self.addr, opts, function() {
       console.log('Connected,', self.sock.authorized ? 'authorized' : 'unauthorized');
       self.sock.setNoDelay(true);
@@ -208,6 +211,7 @@ var BlynkSslServer = function(options) {
       done();
     });
 
+    console.log("SSL server:", self.addr, self.port);
     self.srvr.listen(self.port, self.addr);
   };
 
@@ -259,10 +263,10 @@ var BoardOnOff = function() {
   };
 };
 
-exports.BlynkTcpClient = BlynkTcpClient;
-exports.BlynkTcpServer = BlynkTcpServer;
+exports.TcpClient = BlynkTcpClient;
+exports.TcpServer = BlynkTcpServer;
 
-exports.BlynkSslClient = BlynkSslClient;
-exports.BlynkSslServer = BlynkSslServer;
+exports.SslClient = BlynkSslClient;
+exports.SslServer = BlynkSslServer;
 
 exports.BoardOnOff = BoardOnOff;

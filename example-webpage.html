@@ -35,8 +35,8 @@
         v9.write(new Date().getSeconds());
       });
 
-      blynk.on('connected', function() { alert("Blynk ready."); });
-      blynk.on('disconnected', function() { alert("DISCONNECT"); });
+      blynk.on('connect', function() { alert("Blynk ready."); });
+      blynk.on('disconnect', function() { alert("DISCONNECT"); });
     };
 
     window.addEventListener("load", onInit, false);
