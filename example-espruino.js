@@ -14,8 +14,8 @@ function onInit() {
     v9.write(new Date().getSeconds());
   });
 
-  blynk.on('connected', function() { console.log("Blynk ready."); });
-  blynk.on('disconnected', function() { console.log("DISCONNECT"); });
+  blynk.on('connect', function() { console.log("Blynk ready."); });
+  blynk.on('disconnect', function() { console.log("DISCONNECT"); });
 }
 
 onInit();

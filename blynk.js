@@ -18,7 +18,7 @@ function isEspruino() {
 }
 
 function isNode() {
-  return (typeof module !== 'undefined' && ('exports' in module));
+  return !isEspruino() && (typeof module !== 'undefined' && ('exports' in module));
 }
 
 function isBrowser() {
@@ -26,7 +26,7 @@ function isBrowser() {
 }
 
 function needsEmitter() {
-  return (!isEspruino() && isNode());
+  return isNode();
 }
 
 
@@ -389,10 +389,10 @@ if (typeof module !== 'undefined' && ('exports' in module)) {
   if (isEspruino()) {
     exports.EspruinoSerial = BlynkSerial;
   } else if (isNode()) {
-    exports.TcpClient = bl_node.BlynkTcpClient;
-    exports.TcpServer = bl_node.BlynkTcpServer;
-    exports.SslClient = bl_node.BlynkSslClient;
-    exports.SslServer = bl_node.BlynkSslServer;
+    exports.TcpClient = bl_node.TcpClient;
+    exports.TcpServer = bl_node.TcpServer;
+    exports.SslClient = bl_node.SslClient;
+    exports.SslServer = bl_node.SslServer;
     exports.BoardOnOff = bl_node.BoardOnOff;
   }
 }
