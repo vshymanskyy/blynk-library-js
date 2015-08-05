@@ -1,4 +1,5 @@
-var Blynk = require('./blynk');
+#!/usr/bin/env nodejs
+var Blynk = require('blynk-library');
 
 var blynk = new Blynk.Blynk('715f8caae9bf4a91bae319d0376caa8d');
 

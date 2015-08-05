@@ -118,7 +118,7 @@ var BlynkSslClient = function(options) {
   self.cert = options.cert || null;
   self.pass = options.pass || null;
   // This is necessary only if the server uses the self-signed certificate
-  self.ca   = options.ca   || [ '../certs/server.crt' ];
+  self.ca   = options.ca   || [ 'certs/server.crt' ];
   
   var tls = require('tls');
   var fs = require('fs');
@@ -172,11 +172,11 @@ var BlynkSslServer = function(options) {
   var options = options || {};
   self.addr = options.addr || "0.0.0.0";
   self.port = options.port || 8443;
-  self.key  = options.key  || '../certs/server_raw.pem';
-  self.cert = options.cert || '../certs/server.crt';
+  self.key  = options.key  || 'certs/server.pem';
+  self.cert = options.cert || 'certs/server.crt';
   self.pass = options.pass || null;
   // This is necessary only if the server uses the self-signed certificate
-  self.ca   = options.ca   || [ '../certs/client.crt' ];
+  self.ca   = options.ca   || [ 'certs/client.crt' ];
 
   var tls = require('tls');
   var fs = require('fs');
