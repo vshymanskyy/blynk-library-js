@@ -1,5 +1,7 @@
 /* Copyright (c) 2015 Volodymyr Shymanskyy. See the file LICENSE for copying permission. */
 
+'use strict';
+
 var events = require('events');
 var util = require('util');
 

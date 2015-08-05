@@ -4,6 +4,8 @@
 
 */
 
+'use strict';
+
 var C = {
 };
 
@@ -320,15 +322,15 @@ Blynk.prototype.sendRsp = function(msg_type, msg_id, msg_len, data) {
 
 
   // TODO: track also recieving time
-if (!self.profile) {
-  if (self.timerHb) {
-    clearInterval(self.timerHb);
-    self.timerHb = setInterval(function(){
-      console.log('Heartbeat');
-      self.sendMsg(MsgType.PING, null);
-    }, self.heartbeat);
+  if (!self.profile) {
+    if (self.timerHb) {
+      clearInterval(self.timerHb);
+      self.timerHb = setInterval(function(){
+        //console.log('Heartbeat');
+        self.sendMsg(MsgType.PING, null);
+      }, self.heartbeat);
+    }
   }
-}
 };
 
 Blynk.prototype.sendMsg = function(msg_type, msg_id, values) {
