@@ -37,16 +37,17 @@ v9.on('read', function() {
 });
 ```
 
-## Tested on:
-* Node.js (Windows, Linux)
- * TCP
- * SSL
-* Espruino Pico
- * USB/Serial
-
 ## Boards with supported direct pin IO:
 * Espruino
-* Raspberry Pi/Beaglebone using [onoff](https://www.npmjs.com/package/onoff) package
+* Intel Edison, Galileo using [mraa](https://www.npmjs.com/package/mraa) package
+* Raspberry Pi, Beaglebone using [onoff](https://www.npmjs.com/package/onoff) package
+
+Just install the required package and this module will do auto-detection.
+
+## Tested on:
+* Desktop (Windows, Linux): TCP, SSL
+* Intel Edison
+* Espruino Pico: USB/Serial
 
 ## Espruino
 To test this with the Espruino, you can try this:
