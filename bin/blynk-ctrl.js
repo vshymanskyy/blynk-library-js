@@ -1,8 +1,8 @@
-#!/usr/bin/env nodejs
+#!/usr/bin/env node
 
 var Blynk = require('../');
 
-var blynk = new Blynk.Blynk('715f8caae9bf4a91bae319d0376caa8d', options = {
+var blynk = new Blynk.Blynk("e3918e9a5fbd4739a8c973bcfc4e12b8", options = {
     connector : new Blynk.TcpClient()
 });
 

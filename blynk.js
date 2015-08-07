@@ -109,6 +109,9 @@ if (isEspruino()) {
   };
 
   var BoardEspruino = function(values) {
+    this.init = function(blynk) {
+      this.blynk = blynk;
+    };
     this.process = function(values) {
       switch(values[0]) {
         case 'info':
@@ -146,6 +149,10 @@ if (isEspruino()) {
  */
 
 var BoardDummy = function() {
+  console.log("Dummy mode");
+  this.init = function(blynk) {
+    this.blynk = blynk;
+  };
   this.process = function(values) {
     switch (values[0]) {
     case 'info':
@@ -156,7 +163,8 @@ var BoardDummy = function() {
     case 'dr':
     case 'aw':
     case 'ar':
-      console.log("Dummy board does not support direct pin operations");
+      console.log("Dummy board does not support direct pin operations.");
+      console.log("Maybe you need to install mraa or onoff modules?");
     }
   };
 };
@@ -166,6 +174,7 @@ var BoardDummy = function() {
  */
 
 var Blynk = function(auth, options) {
+  var self = this;
   if (needsEmitter()) {
     events.EventEmitter.call(this);
   }
@@ -180,8 +189,21 @@ var Blynk = function(auth, options) {
   } else if (isEspruino()) {
     this.board = new BoardEspruino();
   } else {
-    this.board = new BoardDummy();
+    [
+        bl_node.BoardMRAA,
+        bl_node.BoardOnOff,
+        BoardDummy
+    ].some(function(b){
+      try {
+        self.board = new b();
+        return true;
+      }
+      catch (e) {
+        return false;
+      }
+    });
   }
+  self.board.init(self);
 
   // Auto-detect connector
   if (options.connector) {
@@ -199,18 +221,16 @@ var Blynk = function(auth, options) {
   this.vpins = [];
   this.profile = options.profile;
 
-
-  var blynk = this;
   this.VirtualPin = function(pin) {
     if (needsEmitter()) {
       events.EventEmitter.call(this);
     }
-    this.blynk = blynk;
+    this.blynk = self;
     this.pin = pin;
-    blynk.vpins[pin] = this;
+    self.vpins[pin] = this;
     
     this.write = function(value) {
-      blynk.virtualWrite(this.pin, value);
+      self.virtualWrite(this.pin, value);
     };
   };
 
@@ -295,10 +315,10 @@ if (!self.profile) {
         //self.sendRsp(MsgType.RSP, msg_id, MsgStatus.ILLEGAL_COMMAND);
       }
     } else if (msg_type === MsgType.REGISTER ||
-                msg_type === MsgType.SAVE_PROF ||
-                msg_type === MsgType.ACTIVATE ||
-                msg_type === MsgType.DEACTIVATE ||
-                msg_type === MsgType.REFRESH)
+               msg_type === MsgType.SAVE_PROF ||
+               msg_type === MsgType.ACTIVATE ||
+               msg_type === MsgType.DEACTIVATE ||
+               msg_type === MsgType.REFRESH)
     {
       // these make no sence...
     } else {
@@ -322,7 +342,7 @@ Blynk.prototype.sendRsp = function(msg_type, msg_id, msg_len, data) {
 
 
   // TODO: track also recieving time
-  if (!self.profile) {
+  /*if (!self.profile) {
     if (self.timerHb) {
       clearInterval(self.timerHb);
       self.timerHb = setInterval(function(){
@@ -330,12 +350,12 @@ Blynk.prototype.sendRsp = function(msg_type, msg_id, msg_len, data) {
         self.sendMsg(MsgType.PING, null);
       }, self.heartbeat);
     }
-  }
+  }*/
 };
 
 Blynk.prototype.sendMsg = function(msg_type, msg_id, values) {
-  values = values || [''];
-  data = values.join('\0');
+  var values = values || [''];
+  var data = values.join('\0');
   this.sendRsp(msg_type, msg_id, data.length, data);
 };
 
@@ -396,5 +416,6 @@ if (typeof module !== 'undefined' && ('exports' in module)) {
     exports.SslClient = bl_node.SslClient;
     exports.SslServer = bl_node.SslServer;
     exports.BoardOnOff = bl_node.BoardOnOff;
+    exports.BoardMRAA = bl_node.BoardMRAA;
   }
 }

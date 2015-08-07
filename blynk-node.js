@@ -229,36 +229,76 @@ var BlynkSslServer = function(options) {
 
 util.inherits(BlynkSslServer, events.EventEmitter);
 
+function scale(value, inMin, inMax, outMin, outMax) {
+  return (value - inMin) * (outMax - outMin) /
+         (inMax - inMin) + outMin;
+}
 
-var BoardOnOff = function() {
-  var Gpio = require('onoff').Gpio;
+exports.BoardMRAA = function() {
+  var mraa = require('mraa');
+  console.log("MRAA mode");
+  this.init = function(blynk) {
+    this.blynk = blynk;
+  };
   this.process = function(values) {
     switch(values[0]) {
       case 'info':
         break;
-      case 'dw':
-        var pin = new Gpio(values[1], 'out');
-        var val = parseInt(values[2], 10);
-        pin.write(val);
+      case 'pm':
         break;
-      case 'aw':
-        var pin = Pin(values[1]);
-        var val = parseInt(values[2], 10);
+      case 'dw': {
+        var pin = new mraa.Gpio(parseInt(values[1]));
+        pin.dir(mraa.DIR_OUT);
+        pin.write(parseInt(values[2]));
+      } break;
+      case 'aw': {
+        var pwm = mraa.Pwm(parseInt(values[1]));
+        pwm.enable(1);
+        pwm.period_us(700);
+        pwm.write(scale(parseFloat(values[2]), 0, 255, 0, 1));
+      } break;
+      case 'dr': {
+        var pin = new mraa.Gpio(parseInt(values[1]));
+        pin.dir(mraa.DIR_IN);
+        this.blynk.virtualWrite(values[1], pin.read());
+      } break;
+      case 'ar': {
+        var pin = new mraa.Aio(parseInt(values[1]));
+        this.blynk.virtualWrite(values[1], pin.read());
+      } break;
+      default:
+        return false;
+    }
+    return true;
+  };
+};
 
+exports.BoardOnOff = function() {
+  var Gpio = require('onoff').Gpio;
+  console.log("OnOff mode");
+  this.init = function(blynk) {
+    this.blynk = blynk;
+  };
+  this.process = function(values) {
+    switch(values[0]) {
+      case 'info':
+        break;
+      case 'pm':
+        break;
+      case 'dw':
+        var pin = new Gpio(parseInt(values[1]), 'out');
+        pin.write(parseInt(values[2]));
         break;
       case 'dr':
         var pin = new Gpio(values[1], 'in');
-        var val = parseInt(values[2], 10);
         pin.read(function(err, value) {
           if (!err) {
-            //blynk.virtualWrite(values[1], value)
+            this.blynk.virtualWrite(values[1], value);
           }
         });
-
         break;
       case 'ar':
-        var pin = Pin(values[1]);
-
+      case 'aw':
         break;
       default:
         return false;
@@ -272,5 +312,3 @@ exports.TcpServer = BlynkTcpServer;
 
 exports.SslClient = BlynkSslClient;
 exports.SslServer = BlynkSslServer;
-
-exports.BoardOnOff = BoardOnOff;
