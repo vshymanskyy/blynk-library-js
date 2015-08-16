@@ -116,25 +116,28 @@ if (isEspruino()) {
       switch(values[0]) {
         case 'info':
           break;
+        case 'pm':
+          // TODO
+          break;
         case 'dw':
           var pin = Pin(values[1]);
-          var val = parseInt(values[2], 10);
+          var val = parseInt(values[2]);
           pinMode(pin, 'output');
           digitalWrite(pin, val);
           break;
         case 'aw':
           var pin = Pin(values[1]);
-          var val = parseInt(values[2], 10);
+          var val = parseFloat(values[2]);
           pinMode(pin, 'output');
-          analogWrite(pin, val);
+          analogWrite(pin, val / 255);
           break;
         case 'dr':
           var pin = Pin(values[1]);
-
+          this.blynk.virtualWrite(values[1], digitalRead(pin));
           break;
         case 'ar':
           var pin = Pin(values[1]);
-
+          this.blynk.virtualWrite(values[1], 4095 * analogRead(pin));
           break;
         default:
           return null;

@@ -1,13 +1,14 @@
 {
   "name": "blynk-library",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "Blynk library implementation for JavaScript (Node.js, Espruino)",
   "main": "./blynk.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "bin": {
-    "blynk-ctrl.js": "bin/blynk-ctrl.js"
+    "blynk-ctrl.js": "bin/blynk-ctrl.js",
+    "blynk.js": "bin/blynk.js"
   },
   "engines": {
     "node": ">= 0.8.0"

@@ -2,7 +2,9 @@
 
 var Blynk = require('blynk-library');
 
-var blynk = new Blynk.Blynk('715f8caae9bf4a91bae319d0376caa8d');
+var blynk = new Blynk.Blynk('715f8caae9bf4a91bae319d0376caa8d', options = {
+  base_dir : '../'
+});
 
 var v1 = new blynk.VirtualPin(1);
 var v9 = new blynk.VirtualPin(9);

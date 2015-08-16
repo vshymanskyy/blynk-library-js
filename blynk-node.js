@@ -9,7 +9,7 @@ var util = require('util');
 * TCP Client
 */
 
-var BlynkTcpClient = function(options) {
+exports.TcpClient = function(options) {
   var self = this;
   events.EventEmitter.call(this);
 
@@ -53,9 +53,9 @@ var BlynkTcpClient = function(options) {
   };
 };
 
-util.inherits(BlynkTcpClient, events.EventEmitter);
+util.inherits(exports.TcpClient, events.EventEmitter);
 
-var BlynkTcpServer = function(options) {
+exports.TcpServer = function(options) {
   var self = this;
   events.EventEmitter.call(this);
 
@@ -102,17 +102,18 @@ var BlynkTcpServer = function(options) {
   };
 };
 
-util.inherits(BlynkTcpServer, events.EventEmitter);
+util.inherits(exports.TcpServer, events.EventEmitter);
 
 /*
 * SSL Client
 */
 
-var BlynkSslClient = function(options) {
+exports.SslClient = function(options) {
   var self = this;
   events.EventEmitter.call(this);
   
   var options = options || {};
+  var base_dir = options.base_dir || "";
   self.addr = options.addr || "cloud.blynk.cc";
   self.port = options.port || 8441;
   // These are necessary only if using the client certificate authentication
@@ -120,7 +121,7 @@ var BlynkSslClient = function(options) {
   self.cert = options.cert || null;
   self.pass = options.pass || null;
   // This is necessary only if the server uses the self-signed certificate
-  self.ca   = options.ca   || [ 'certs/server.crt' ];
+  self.ca   = options.ca   || [ base_dir + 'certs/server.crt' ];
   
   var tls = require('tls');
   var fs = require('fs');
@@ -165,20 +166,21 @@ var BlynkSslClient = function(options) {
   };
 };
 
-util.inherits(BlynkSslClient, events.EventEmitter);
+util.inherits(exports.SslClient, events.EventEmitter);
 
-var BlynkSslServer = function(options) {
+exports.SslServer = function(options) {
   var self = this;
   events.EventEmitter.call(this);
 
   var options = options || {};
+  var base_dir = options.base_dir || "";
   self.addr = options.addr || "0.0.0.0";
   self.port = options.port || 8443;
-  self.key  = options.key  || 'certs/server.pem';
-  self.cert = options.cert || 'certs/server.crt';
+  self.key  = options.key  || base_dir + 'certs/server.pem';
+  self.cert = options.cert || base_dir + 'certs/server.crt';
   self.pass = options.pass || null;
   // This is necessary only if the server uses the self-signed certificate
-  self.ca   = options.ca   || [ 'certs/client.crt' ];
+  self.ca   = options.ca   || [ base_dir + 'certs/client.crt' ];
 
   var tls = require('tls');
   var fs = require('fs');
@@ -227,9 +229,9 @@ var BlynkSslServer = function(options) {
   };
 };
 
-util.inherits(BlynkSslServer, events.EventEmitter);
+util.inherits(exports.SslServer, events.EventEmitter);
 
-function scale(value, inMin, inMax, outMin, outMax) {
+var scale = function(value, inMin, inMax, outMin, outMax) {
   return (value - inMin) * (outMax - outMin) /
          (inMax - inMin) + outMin;
 }
@@ -306,9 +308,3 @@ exports.BoardOnOff = function() {
     return true;
   };
 };
-
-exports.TcpClient = BlynkTcpClient;
-exports.TcpServer = BlynkTcpServer;
-
-exports.SslClient = BlynkSslClient;
-exports.SslServer = BlynkSslServer;
