@@ -237,6 +237,27 @@ var Blynk = function(auth, options) {
     };
   };
 
+  this.WidgetBridge = function(vPin) {
+    if (needsEmitter()) {
+      events.EventEmitter.call(this);
+    }
+    this.blynk = self;
+    this.mPin = vPin;
+
+    this.setAuthToken = function(token) {
+      self.sendMsg(MsgType.BRIDGE, null, [this.mPin, 'i', token]);
+    }
+    this.digitalWrite = function(pin, val) {
+      self.sendMsg(MsgType.BRIDGE, null, [this.mPin, 'dw', pin, val]);
+    }
+    this.analogWrite = function(pin, val) {
+      self.sendMsg(MsgType.BRIDGE, null, [this.mPin, 'aw', pin, val]);
+    }
+    this.virtualWrite = function(pin, val) {
+      self.sendMsg(MsgType.BRIDGE, null, [this.mPin, 'vw', pin, val]);
+    }
+  }
+
   if (needsEmitter()) {
     util.inherits(this.VirtualPin, events.EventEmitter);
   } else if (isBrowser()) {
