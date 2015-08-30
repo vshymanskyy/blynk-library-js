@@ -1,9 +1,9 @@
-#!/usr/bin/env nodejs
+#!/usr/bin/env node
 
 var Blynk = require('blynk-library');
 
 var blynk = new Blynk.Blynk('715f8caae9bf4a91bae319d0376caa8d', options = {
-  base_dir : '../'
+  certs_path : '../certs/'
 });
 
 var v1 = new blynk.VirtualPin(1);

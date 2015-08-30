@@ -113,7 +113,7 @@ exports.SslClient = function(options) {
   events.EventEmitter.call(this);
   
   var options = options || {};
-  var base_dir = options.base_dir || "";
+  var certs_path = options.certs_path || "";
   self.addr = options.addr || "cloud.blynk.cc";
   self.port = options.port || 8441;
   // These are necessary only if using the client certificate authentication
@@ -121,7 +121,7 @@ exports.SslClient = function(options) {
   self.cert = options.cert || null;
   self.pass = options.pass || null;
   // This is necessary only if the server uses the self-signed certificate
-  self.ca   = options.ca   || [ base_dir + 'certs/server.crt' ];
+  self.ca   = options.ca   || [ certs_path + 'server.crt' ];
   
   var tls = require('tls');
   var fs = require('fs');
@@ -173,14 +173,14 @@ exports.SslServer = function(options) {
   events.EventEmitter.call(this);
 
   var options = options || {};
-  var base_dir = options.base_dir || "";
+  var certs_path = options.certs_path || "";
   self.addr = options.addr || "0.0.0.0";
   self.port = options.port || 8443;
-  self.key  = options.key  || base_dir + 'certs/server.pem';
-  self.cert = options.cert || base_dir + 'certs/server.crt';
+  self.key  = options.key  || certs_path + 'server.pem';
+  self.cert = options.cert || certs_path + 'server.crt';
   self.pass = options.pass || null;
   // This is necessary only if the server uses the self-signed certificate
-  self.ca   = options.ca   || [ base_dir + 'certs/client.crt' ];
+  self.ca   = options.ca   || [ certs_path + 'client.crt' ];
 
   var tls = require('tls');
   var fs = require('fs');
