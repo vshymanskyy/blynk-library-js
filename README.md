@@ -22,9 +22,11 @@ If you need more information, please follow these links:
 
 ## Usage example:
 ```js
-var Blynk = require('blynk');
+var Blynk = require('blynk-library');
 
-var blynk = new Blynk.Blynk('7736215262c242c1989a1e262fbbcb19');
+var blynk = new Blynk.Blynk('715f8caae9bf4a91bae319d0376caa8d', options = {
+  certs_path : '../certs/'
+});
 var v1 = new blynk.VirtualPin(1);
 var v9 = new blynk.VirtualPin(9);
 

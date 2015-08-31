@@ -12,6 +12,11 @@ if (0) {
   blynk_opts.connector = new Blynk.TcpClient();
 }
 
+if (!process.argv[2]) {
+  console.log("Please specify auth token.");
+  process.exit(1);
+}
+
 var blynk = new Blynk.Blynk(process.argv[2], options = blynk_opts);
 
 blynk.on('connect', function() {

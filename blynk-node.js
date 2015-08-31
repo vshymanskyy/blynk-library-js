@@ -4,6 +4,7 @@
 
 var events = require('events');
 var util = require('util');
+var path = require('path');
 
 /*
 * TCP Client
@@ -121,7 +122,7 @@ exports.SslClient = function(options) {
   self.cert = options.cert || null;
   self.pass = options.pass || null;
   // This is necessary only if the server uses the self-signed certificate
-  self.ca   = options.ca   || [ certs_path + 'server.crt' ];
+  self.ca   = options.ca   || [ path.join(certs_path, 'server.crt') ];
   
   var tls = require('tls');
   var fs = require('fs');
@@ -176,11 +177,11 @@ exports.SslServer = function(options) {
   var certs_path = options.certs_path || "";
   self.addr = options.addr || "0.0.0.0";
   self.port = options.port || 8443;
-  self.key  = options.key  || certs_path + 'server.pem';
-  self.cert = options.cert || certs_path + 'server.crt';
+  self.key  = options.key  || path.join(certs_path, 'server.pem');
+  self.cert = options.cert || path.join(certs_path, 'server.crt');
   self.pass = options.pass || null;
   // This is necessary only if the server uses the self-signed certificate
-  self.ca   = options.ca   || [ certs_path + 'client.crt' ];
+  self.ca   = options.ca   || [ path.join(certs_path, 'client.crt') ];
 
   var tls = require('tls');
   var fs = require('fs');

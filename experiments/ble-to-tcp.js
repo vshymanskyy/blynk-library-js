@@ -3,8 +3,6 @@ var noble = require('noble');
 var stream = require("stream");
 var net = require("net");
 
-var peripherals = [];
-
 ////////////////////////////////////////////////////////////
 
 function BleRawSerial(peripheral, opts, options) {
@@ -32,7 +30,7 @@ BleRawSerial.prototype.connect = function (callback) {
           if (err) throw err;
         });
         self.char_rx.on('read', function(data, isNotification) {
-          //console.log('Got ' + data.length + ' bytes');
+          //console.log('>', data);
           if (!self.push(data)) {
             //self._source.readStop();
           }
@@ -47,13 +45,16 @@ BleRawSerial.prototype._read = function (size) {
   //this._source.readStart();
 };
 
-BleRawSerial.prototype._write = function (chunk, enc, cb) {
-  this.char_tx.write(chunk, true, function(err) {
-    //console.log('Sent ' + chunk.length + ' bytes');
-    if (typeof cb === 'function') {
-      cb(err);
-    }
-  });
+BleRawSerial.prototype._write = function (data, enc, done) {
+  var i = 0;
+  for (; i+20<data.length; i+=20) {
+    var ch = data.slice(i, i+20);
+    //console.log('<', ch);
+    this.char_tx.write(ch, true);
+  }
+  var ch = data.slice(i, i+20);
+  //console.log('<', ch);
+  this.char_tx.write(ch, true, done);
 };
 
 ////////////////////////////////////////////////////////////
@@ -176,33 +177,44 @@ BleBeanSerial.prototype._onRead = function(gt){
 };
 
 BleBeanSerial.prototype.sendCmd = function(cmdBuffer,payloadBuffer,done) {
-
-  //size buffer contains size of(cmdBuffer, and payloadBuffer) and a reserved byte set to 0
   var sizeBuffer = new Buffer(2);
   sizeBuffer.writeUInt8(cmdBuffer.length + payloadBuffer.length,0);
   sizeBuffer.writeUInt8(0,1);
 
   //GST contains sizeBuffer, cmdBuffer, and payloadBuffer
-  var gstBuffer = Buffer.concat([sizeBuffer,cmdBuffer,payloadBuffer]);
+  var gst = Buffer.concat([sizeBuffer,cmdBuffer,payloadBuffer]);
 
-  var crcString = crc.crc16ccitt(gstBuffer);
+  var crcString = crc.crc16ccitt(gst);
   var crc16Buffer = new Buffer(2);
-  crc16Buffer.writeUInt16BE(crcString, 0);
+  crc16Buffer.writeUInt16LE(crcString, 0);
+  
+  gst = Buffer.concat([sizeBuffer,cmdBuffer,payloadBuffer,crc16Buffer]);
+  
+  var gt_qty = Math.floor(gst.length/19);
+  if (gst.length % 19 != 0) {
+    gt_qty += 1;
+  }
+  var optimal_packet_size = 19;
+  
+  for (var ch=0; ch<gt_qty; ch++) {
+    var data = gst.slice(ch*optimal_packet_size, (ch+1)*optimal_packet_size);
+    
+    var gt = (this.count * 0x20); // << 5
+    if (ch == 0) {
+      gt |= 0x80;
+    }
+    gt |= gt_qty - ch - 1;
+    
+    gt = Buffer.concat([new Buffer([ gt ]), data]);
+    //console.log('<', gt);
+    if (ch == gt_qty-1) {
+        this.char_rxtx.write(gt, true, done);
+    } else {
+        this.char_rxtx.write(gt, true);
+    }
+  }
 
-  //GATT contains sequence header, gstBuffer and crc166
-  var gattBuffer = new Buffer(1 + gstBuffer.length + crc16Buffer.length);
-
-  var header = (((this.count++ * 0x20) | 0x80) & 0xff);
-  gattBuffer[0]=header;
-
-  gstBuffer.copy(gattBuffer,1,0); //copy gstBuffer into gatt shifted right 1
-
-  //swap 2 crc bytes and add to end of gatt
-  gattBuffer[gattBuffer.length-2]=crc16Buffer[1];
-  gattBuffer[gattBuffer.length-1]=crc16Buffer[0];
-
-  this.char_rxtx.write(gattBuffer, true, done);
-
+  this.count = (this.count + 1) % 4;
 };
 
 BleBeanSerial.prototype.connect = function (callback) {
@@ -218,6 +230,7 @@ BleBeanSerial.prototype.connect = function (callback) {
           if (err) throw err;
         });
         self.char_rxtx.on('read', function(data, isNotification) {
+          //console.log('>', data);
           self._onRead(data);
         });
         self.unGate();
@@ -231,9 +244,12 @@ BleBeanSerial.prototype._read = function (size) {
   //this._source.readStart();
 };
 
-BleBeanSerial.prototype._write = function (chunk, enc, cb) {
-  // TODO: Cut into chunks
-  this.sendCmd(commands.MSG_ID_SERIAL_DATA, chunk, cb);
+BleBeanSerial.prototype._write = function (data, enc, done) {
+  var i = 0;
+  for (; i+64<data.length; i+=64) {
+    this.sendCmd(commands.MSG_ID_SERIAL_DATA, data.slice(i, i+64));
+  }
+  this.sendCmd(commands.MSG_ID_SERIAL_DATA, data.slice(i, i+64), done);
 };
 
 BleBeanSerial.prototype.unGate = function(done) {
@@ -257,7 +273,7 @@ BleBeanSerial.prototype.requestTemp = function(done) {
 var dev_service_uuids = {
   '713d0000503e4c75ba943148f18d941e': {
     name : 'mbed NRF51822',
-    class: BleRawSerial,
+    create: BleRawSerial,
     options: {
       uuid_svc:'713d0000503e4c75ba943148f18d941e',
       uuid_tx: '713d0003503e4c75ba943148f18d941e',
@@ -266,7 +282,7 @@ var dev_service_uuids = {
   },
   '6e400001b5a3f393e0a9e50e24dcca9e': {
     name : 'Nordic NRF8001 Serial',
-    class: BleRawSerial,
+    create: BleRawSerial,
     options: {
       uuid_svc:'6e400001b5a3f393e0a9e50e24dcca9e',
       uuid_tx: '6e400002b5a3f393e0a9e50e24dcca9e',
@@ -275,7 +291,7 @@ var dev_service_uuids = {
   },
   'a495ff10c5b14b44b5121370f02d74de': {
     name : 'LightBlue Bean',
-    class: BleBeanSerial,
+    create: BleBeanSerial,
     options: {
       uuid_svc:  'a495ff10c5b14b44b5121370f02d74de',
       uuid_rxtx: 'a495ff11c5b14b44b5121370f02d74de'
@@ -295,6 +311,8 @@ noble.on('stateChange', function(state) {
   }
 });
 
+var peripherals = {};
+
 // TODO: Multiple device connect?
 noble.on('discover', function(peripheral) {
   var name = peripheral.advertisement.localName;
@@ -310,9 +328,17 @@ noble.on('discover', function(peripheral) {
 
       peripheral.connect(function(err) {
         if (err) throw err;          
-        peripherals[peripherals.length] = peripheral;
+        peripherals[uuid] = peripheral;
+        
 
-        var ble_ser = new svc.class(peripheral, svc.options);
+        /*peripheral.on('rssiUpdate', function(rssi) {
+          console.log(name, 'rssi:', rssi);
+        });
+        setInterval(function(){
+          peripheral.updateRssi();
+        }, 2000);*/
+
+        var ble_ser = new svc.create(peripheral, svc.options);
         ble_ser.connect(function(err) {
           if (err) throw err;
           console.log('BLE connected');
@@ -321,6 +347,16 @@ noble.on('discover', function(peripheral) {
           if (err) throw err;
           console.log('TCP connected');
         });
+        
+        peripheral.on('disconnect', function() {
+          console.log('BLE disconnect', uuid);
+          delete peripherals[uuid];
+          tcp_conn.end();
+          setTimeout(function() {
+            noble.startScanning();
+          }, 100);
+        });
+        
         ble_ser.on('error', function(){ console.log('BLE error'); });
         tcp_conn.on('error', function(){ console.log('TCP error');});
         ble_ser.on('close', function(){ console.log('BLE close'); });
@@ -336,9 +372,9 @@ noble.on('discover', function(peripheral) {
 
 // catches ctrl+c event
 process.on('SIGINT', function() {
-  peripherals.forEach(function(peripheral) {
-    console.log('Disconnecting from ' + peripheral.uuid + '...');
-    peripheral.disconnect( function(){
+  Object.keys(peripherals).forEach(function(uuid) {
+    console.log('Disconnecting from ' + uuid + '...');
+    peripherals[uuid].disconnect( function(){
       console.log('disconnected');
     });
   });
