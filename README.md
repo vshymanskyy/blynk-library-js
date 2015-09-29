@@ -44,7 +44,7 @@ v9.on('read', function() {
  * Intel Edison
  * Desktop (Windows, Linux): TCP, SSL
 * Espruino
- * Pico: ESP8266 0v25, over USB/Serial
+ * Pico: ESP8266WiFi_0v25, over USB/Serial
  * VoCore (using OpenWRT Espruino package)
  * Linux
 
