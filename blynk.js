@@ -79,6 +79,7 @@ if (isNode()) {
  * Serial
  */
 if (isEspruino()) {
+
   var EspruinoSerial = function(options) {
     var self = this;
 
@@ -292,13 +293,12 @@ var Blynk = function(auth, options) {
   this.vpins = [];
   this.profile = options.profile;
 
-  this.VirtualPin = function(pin) {
+  this.VirtualPin = function(vPin) {
     if (needsEmitter()) {
       events.EventEmitter.call(this);
     }
-    this.blynk = self;
-    this.pin = pin;
-    self.vpins[pin] = this;
+    this.pin = vPin;
+    self.vpins[vPin] = this;
 
     this.write = function(value) {
       self.virtualWrite(this.pin, value);
@@ -306,23 +306,31 @@ var Blynk = function(auth, options) {
   };
 
   this.WidgetBridge = function(vPin) {
+    this.pin = vPin;
+
+    this.setAuthToken = function(token) {
+      self.sendMsg(MsgType.BRIDGE, null, [this.pin, 'i', token]);
+    };
+    this.digitalWrite = function(pin, val) {
+      self.sendMsg(MsgType.BRIDGE, null, [this.pin, 'dw', pin, val]);
+    };
+    this.analogWrite = function(pin, val) {
+      self.sendMsg(MsgType.BRIDGE, null, [this.pin, 'aw', pin, val]);
+    };
+    this.virtualWrite = function(pin, val) {
+      self.sendMsg(MsgType.BRIDGE, null, [this.pin, 'vw', pin, val]);
+    };
+  };
+
+  this.WidgetTerminal = function(vPin) {
     if (needsEmitter()) {
       events.EventEmitter.call(this);
     }
-    this.blynk = self;
-    this.mPin = vPin;
+    this.pin = vPin;
+    self.vpins[vPin] = this;
 
-    this.setAuthToken = function(token) {
-      self.sendMsg(MsgType.BRIDGE, null, [this.mPin, 'i', token]);
-    };
-    this.digitalWrite = function(pin, val) {
-      self.sendMsg(MsgType.BRIDGE, null, [this.mPin, 'dw', pin, val]);
-    };
-    this.analogWrite = function(pin, val) {
-      self.sendMsg(MsgType.BRIDGE, null, [this.mPin, 'aw', pin, val]);
-    };
-    this.virtualWrite = function(pin, val) {
-      self.sendMsg(MsgType.BRIDGE, null, [this.mPin, 'vw', pin, val]);
+    this.write = function(data) {
+      self.virtualWrite(this.pin, data);
     };
   };
 
