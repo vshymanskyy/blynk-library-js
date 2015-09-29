@@ -280,7 +280,7 @@ var Blynk = function(auth, options) {
   if (options.connector) {
     this.conn = options.connector;
   } else if (isEspruino()) {
-    this.conn = new BlynkSerial(options);
+    this.conn = new EspruinoTCP(options);
   } else if (isBrowser()) {
     this.conn = new BlynkWsClient(options);
   } else {
