@@ -51,6 +51,7 @@ v9.on('read', function() {
 ## Boards with supported direct pin IO:
 * Intel Edison, Galileo using [mraa](https://www.npmjs.com/package/mraa) package
 * Raspberry Pi, Beaglebone using [onoff](https://www.npmjs.com/package/onoff) package
+* Espruino Pico
 * OpenWrt + Espruino package
 
 Just install the required package and this module will do auto-detection.
