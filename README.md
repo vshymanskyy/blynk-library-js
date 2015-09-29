@@ -39,23 +39,18 @@ v9.on('read', function() {
 });
 ```
 
-## Boards with supported direct pin IO:
+## Tested on:
+* Node.js
+ * Intel Edison
+ * Desktop (Windows, Linux): TCP, SSL
 * Espruino
+ * Pico: ESP8266 0v25, over USB/Serial
+ * VoCore (using OpenWRT Espruino package)
+ * Linux
+
+## Boards with supported direct pin IO:
 * Intel Edison, Galileo using [mraa](https://www.npmjs.com/package/mraa) package
 * Raspberry Pi, Beaglebone using [onoff](https://www.npmjs.com/package/onoff) package
+* OpenWrt + Espruino package
 
 Just install the required package and this module will do auto-detection.
-
-## Tested on:
-* Desktop (Windows, Linux): TCP, SSL
-* Intel Edison
-* Espruino Pico: USB/Serial
-
-## Espruino
-To test this with the Espruino, you can try this:
-```js
-var Blynk = require('http://tiny.cc/blynk-js')
-```
-It will automatically detect Espruino and try connecting to Blynk over default USB.
-
-**Warning: it will move console to Serial1! Don't try this if you don't know how to switch it back!**
