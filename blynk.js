@@ -107,7 +107,7 @@ if (isEspruino()) {
       //self.ser.setConsole();
     };
   };
-  
+
   var EspruinoTCP = function(options) {
     var self = this;
 
@@ -299,7 +299,7 @@ var Blynk = function(auth, options) {
     this.blynk = self;
     this.pin = pin;
     self.vpins[pin] = this;
-    
+
     this.write = function(value) {
       self.virtualWrite(this.pin, value);
     };
@@ -314,24 +314,24 @@ var Blynk = function(auth, options) {
 
     this.setAuthToken = function(token) {
       self.sendMsg(MsgType.BRIDGE, null, [this.mPin, 'i', token]);
-    }
+    };
     this.digitalWrite = function(pin, val) {
       self.sendMsg(MsgType.BRIDGE, null, [this.mPin, 'dw', pin, val]);
-    }
+    };
     this.analogWrite = function(pin, val) {
       self.sendMsg(MsgType.BRIDGE, null, [this.mPin, 'aw', pin, val]);
-    }
+    };
     this.virtualWrite = function(pin, val) {
       self.sendMsg(MsgType.BRIDGE, null, [this.mPin, 'vw', pin, val]);
-    }
-  }
+    };
+  };
 
   if (needsEmitter()) {
     util.inherits(this.VirtualPin, events.EventEmitter);
   } else if (isBrowser()) {
     MicroEvent.mixin(this.VirtualPin);
   }
-  
+
   if (!options.skip_connect) {
     this.connect();
   }
@@ -388,15 +388,15 @@ if (!self.profile) {
     } else if (msg_type === MsgType.LOAD_PROF) {
       self.sendRsp(MsgType.LOAD_PROF, msg_id, self.profile.length, self.profile);
     } else if (msg_type === MsgType.HW ||
-                msg_type === MsgType.BRIDGE)
+               msg_type === MsgType.BRIDGE)
     {
-      if (values[0] === 'vw') {        
-        var pin = parseInt(values[1], 10);
+      if (values[0] === 'vw') {
+        var pin = parseInt(values[1]);
         if (this.vpins[pin]) {
           this.vpins[pin].emit('write', values.slice(2));
         }
       } else if (values[0] === 'vr') {
-        var pin = parseInt(values[1], 10);
+        var pin = parseInt(values[1]);
         if (this.vpins[pin]) {
           this.vpins[pin].emit('read');
         }
@@ -476,7 +476,10 @@ Blynk.prototype.connect = function() {
 
 Blynk.prototype.disconnect = function() {
   this.conn.disconnect();
-  clearInterval(this.timerHb);
+  if (this.timerHb) {
+    clearInterval(this.timerHb);
+    this.timerHb = null;
+  }
   this.emit('disconnect');
 };
 
