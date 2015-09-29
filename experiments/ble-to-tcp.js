@@ -307,7 +307,7 @@ noble.on('stateChange', function(state) {
     console.log('Scanning for BLE devices...');
   } else {
     noble.stopScanning();
-    console.log('State changed to ' + '. Scanning stopped.');
+    console.log('State changed to ' + state + '. Scanning stopped.');
   }
 });
 

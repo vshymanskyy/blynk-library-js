@@ -1,6 +1,6 @@
 {
   "name": "blynk-library",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "description": "Blynk library implementation for JavaScript (Node.js, Espruino)",
   "main": "./blynk.js",
   "scripts": {

@@ -79,7 +79,7 @@ if (isNode()) {
  * Serial
  */
 if (isEspruino()) {
-  var BlynkSerial = function(options) {
+  var EspruinoSerial = function(options) {
     var self = this;
 
     var options = options || {};
@@ -107,8 +107,47 @@ if (isEspruino()) {
       //self.ser.setConsole();
     };
   };
+  
+  var EspruinoTCP = function(options) {
+    var self = this;
 
-  var BoardEspruino = function(values) {
+    var options = options || {};
+    self.addr = options.addr || "cloud.blynk.cc";
+    self.port = options.port || 8442;
+
+    var net = require('net');
+
+    this.write = function(data) {
+      if (self.sock) {
+        self.sock.write(data, 'binary');
+      }
+    };
+
+    this.connect = function(done) {
+      if (self.sock) {
+        self.disconnect();
+      }
+      console.log("Connecting to TCP:", self.addr, self.port);
+      self.sock = net.connect({host : self.addr, port: self.port}, function() {
+        console.log('Connected');
+        self.sock.on('data', function(data) {
+          self.emit('data', data);
+        });
+        self.sock.on('end', function() {
+          self.emit('end', '');
+        });
+        done();
+      });
+    };
+
+    this.disconnect = function() {
+      if (self.sock) {
+        self.sock = null;
+      }
+    };
+  };
+
+  var BoardEspruinoPico = function(values) {
     this.init = function(blynk) {
       this.blynk = blynk;
     };
@@ -125,19 +164,50 @@ if (isEspruino()) {
           pinMode(pin, 'output');
           digitalWrite(pin, val);
           break;
+        case 'dr':
+          var pin = Pin(values[1]);
+          this.blynk.sendMsg(MsgType.HW, null, ['dw', values[1], digitalRead(pin)]);
+          break;
         case 'aw':
           var pin = Pin(values[1]);
           var val = parseFloat(values[2]);
           pinMode(pin, 'output');
           analogWrite(pin, val / 255);
           break;
-        case 'dr':
-          var pin = Pin(values[1]);
-          this.blynk.virtualWrite(values[1], digitalRead(pin));
-          break;
         case 'ar':
           var pin = Pin(values[1]);
-          this.blynk.virtualWrite(values[1], 4095 * analogRead(pin));
+          this.blynk.sendMsg(MsgType.HW, null, ['aw', values[1], 4095 * analogRead(pin)]);
+          break;
+        default:
+          return null;
+      }
+      return true;
+    };
+  };
+
+  var BoardEspruinoLinux = function(values) {
+    this.init = function(blynk) {
+      this.blynk = blynk;
+    };
+    this.process = function(values) {
+      switch(values[0]) {
+        case 'info':
+          break;
+        case 'pm':
+          // TODO
+          break;
+        case 'dw':
+          var pin = Pin('D' + values[1]);
+          var val = parseInt(values[2]);
+          pinMode(pin, 'output');
+          digitalWrite(pin, val);
+          break;
+        case 'dr':
+          var pin = Pin('D' + values[1]);
+          this.blynk.sendMsg(MsgType.HW, null, ['dw', values[1], digitalRead(pin)]);
+          break;
+        case 'aw':
+        case 'ar':
           break;
         default:
           return null;
@@ -152,22 +222,20 @@ if (isEspruino()) {
  */
 
 var BoardDummy = function() {
-  console.log("Dummy mode");
   this.init = function(blynk) {
     this.blynk = blynk;
   };
   this.process = function(values) {
     switch (values[0]) {
     case 'info':
-      return true;
     case 'pm':
-      return true;
     case 'dw':
     case 'dr':
     case 'aw':
     case 'ar':
-      console.log("Dummy board does not support direct pin operations.");
+      console.log("No direct pin operations available.");
       console.log("Maybe you need to install mraa or onoff modules?");
+      return true;
     }
   };
 };
@@ -190,7 +258,7 @@ var Blynk = function(auth, options) {
   if (options.board) {
     this.board = options.board;
   } else if (isEspruino()) {
-    this.board = new BoardEspruino();
+    this.board = new BoardEspruinoPico();
   } else {
     [
         bl_node.BoardMRAA,
@@ -433,7 +501,10 @@ if (typeof module !== 'undefined' && ('exports' in module)) {
   exports.Blynk = Blynk;
 
   if (isEspruino()) {
-    exports.EspruinoSerial = BlynkSerial;
+    exports.EspruinoSerial = EspruinoSerial;
+    exports.EspruinoTCP = EspruinoTCP;
+    exports.BoardLinux = BoardEspruinoLinux;
+    exports.BoardPico  = BoardEspruinoPico;
   } else if (isNode()) {
     exports.TcpClient = bl_node.TcpClient;
     exports.TcpServer = bl_node.TcpServer;
