@@ -2,7 +2,9 @@
 
 var Blynk = require('blynk-library');
 
-var blynk = new Blynk.Blynk('Your main api key', options = {
+var AUTH = 'YOUR_AUTH_TOKEN';
+
+var blynk = new Blynk.Blynk(AUTH, options = {
   certs_path : '../certs/'
 });
 

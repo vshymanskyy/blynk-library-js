@@ -2,7 +2,9 @@
 
 var Blynk = require('blynk-library');
 
-var blynk = new Blynk.Blynk('715f8caae9bf4a91bae319d0376caa8d', options = {
+var AUTH = 'YOUR_AUTH_TOKEN';
+
+var blynk = new Blynk.Blynk(AUTH, options = {
   connector : new Blynk.TcpClient()
 });
 
