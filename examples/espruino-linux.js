@@ -1,4 +1,10 @@
 #!/usr/bin/env espruino
+
+/*
+ * In the same directory as this script,
+ * create a node_modules folder and put blynk.js module inside.
+ */
+
 var Blynk = require('blynk');
 
 var AUTH = 'YOUR_AUTH_TOKEN';
