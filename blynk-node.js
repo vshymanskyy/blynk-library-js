@@ -243,7 +243,7 @@ var scale = function(value, inMin, inMax, outMin, outMax) {
 
 exports.BoardMRAA = function() {
   var mraa = require('mraa');
-  console.log('MRAA Version: ' + m.getVersion());
+  console.log('MRAA Version: ' + mraa.getVersion());
   this.init = function(blynk) {
     this.blynk = blynk;
   };
