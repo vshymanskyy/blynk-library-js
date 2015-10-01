@@ -10,6 +10,10 @@ var path = require('path');
 * TCP Client
 */
 
+var MsgType = {
+  HW            :  20
+};
+
 exports.TcpClient = function(options) {
   var self = this;
   events.EventEmitter.call(this);
@@ -239,7 +243,7 @@ var scale = function(value, inMin, inMax, outMin, outMax) {
 
 exports.BoardMRAA = function() {
   var mraa = require('mraa');
-  console.log("MRAA mode");
+  console.log('MRAA Version: ' + m.getVersion());
   this.init = function(blynk) {
     this.blynk = blynk;
   };
@@ -255,8 +259,8 @@ exports.BoardMRAA = function() {
         pin.write(parseInt(values[2]));
       } break;
       case 'aw': {
-        var pwm = mraa.Pwm(parseInt(values[1]));
-        pwm.enable(1);
+        var pwm = new mraa.Pwm(parseInt(values[1]));
+        pwm.enable(true);
         pwm.period_us(700);
         pwm.write(scale(parseFloat(values[2]), 0, 255, 0, 1));
       } break;
@@ -266,7 +270,7 @@ exports.BoardMRAA = function() {
         this.blynk.sendMsg(MsgType.HW, null, ['dw', values[1], pin.read()]);
       } break;
       case 'ar': {
-        var pin = new mraa.Aio(parseInt(values[1]));
+        var pin = new mraa.Aio(parseInt(values[1])-14); // TODO
         this.blynk.sendMsg(MsgType.HW, null, ['aw', values[1], pin.read()]);
       } break;
       default:
