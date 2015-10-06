@@ -336,8 +336,12 @@ var Blynk = function(auth, options) {
 
   if (needsEmitter()) {
     util.inherits(this.VirtualPin, events.EventEmitter);
+    util.inherits(this.WidgetBridge, events.EventEmitter);
+    util.inherits(this.WidgetTerminal, events.EventEmitter);
   } else if (isBrowser()) {
     MicroEvent.mixin(this.VirtualPin);
+    MicroEvent.mixin(this.WidgetBridge);
+    MicroEvent.mixin(this.WidgetTerminal);
   }
 
   if (!options.skip_connect) {
