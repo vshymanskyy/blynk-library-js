@@ -20,6 +20,10 @@ If you need more information, please follow these links:
 * [Facebook](http://www.fb.com/blynkapp)
 * [Twitter](http://twitter.com/blynk_app)
 
+## Getting Started tutorial
+
+http://www.instructables.com/id/Blynk-JavaScript-in-20-minutes-Raspberry-Pi-Edison/
+
 ## Usage example:
 ```js
 var Blynk = require('blynk-library');
