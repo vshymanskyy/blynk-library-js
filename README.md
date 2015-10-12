@@ -20,9 +20,10 @@ If you need more information, please follow these links:
 * [Facebook](http://www.fb.com/blynkapp)
 * [Twitter](http://twitter.com/blynk_app)
 
-## Getting Started tutorial
+## Getting Started tutorials
 
-http://www.instructables.com/id/Blynk-JavaScript-in-20-minutes-Raspberry-Pi-Edison/
+* [Blynk + JavaScript in 20 minutes (Raspberry Pi, Edison, Espruino...)](http://www.instructables.com/id/Blynk-JavaScript-in-20-minutes-Raspberry-Pi-Edison/)
+* [Raspberry Pi + DHT11/DHT22/AM2302](http://www.instructables.com/id/Raspberry-Pi-Nodejs-Blynk-App-DHT11DHT22AM2302/)
 
 ## Usage example:
 ```js
