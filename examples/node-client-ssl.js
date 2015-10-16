@@ -4,9 +4,7 @@ var Blynk = require('blynk-library');
 
 var AUTH = 'YOUR_AUTH_TOKEN';
 
-var blynk = new Blynk.Blynk(AUTH, options = {
-  certs_path : '../certs/'
-});
+var blynk = new Blynk.Blynk(AUTH);
 
 var v1 = new blynk.VirtualPin(1);
 var v9 = new blynk.VirtualPin(9);

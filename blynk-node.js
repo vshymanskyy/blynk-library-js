@@ -6,6 +6,8 @@ var events = require('events');
 var util = require('util');
 var path = require('path');
 
+var default_certs_path = path.join(__dirname, "certs");
+
 /*
 * TCP Client
 */
@@ -118,7 +120,7 @@ exports.SslClient = function(options) {
   events.EventEmitter.call(this);
   
   var options = options || {};
-  var certs_path = options.certs_path || "";
+  var certs_path = options.certs_path || default_certs_path;
   self.addr = options.addr || "cloud.blynk.cc";
   self.port = options.port || 8441;
   // These are necessary only if using the client certificate authentication
@@ -178,7 +180,7 @@ exports.SslServer = function(options) {
   events.EventEmitter.call(this);
 
   var options = options || {};
-  var certs_path = options.certs_path || "";
+  var certs_path = options.certs_path || default_certs_path;
   self.addr = options.addr || "0.0.0.0";
   self.port = options.port || 8443;
   self.key  = options.key  || path.join(certs_path, 'server.pem');

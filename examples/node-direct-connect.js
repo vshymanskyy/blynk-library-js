@@ -3,7 +3,7 @@
 var Blynk = require('blynk-library');
 
 var blynk = new Blynk.Blynk('none', options = {
-    connector : new Blynk.SslServer(options = { certs_path : '../certs/' }),
+    connector : new Blynk.SslServer(),
     profile : '{"dashBoards":[{"id":1,"boardType":"ESP8266","name":"Direct connect","widgets":[{"id":1,"type":"BUTTON","pinType":"VIRTUAL","pin":1,"value":"1","x":1,"y":1,"pushMode":false},{"id":2,"type":"DIGIT4_DISPLAY","pinType":"VIRTUAL","pin":9,"frequency":1000,"x":5,"y":1}]}]}'
 });
 
