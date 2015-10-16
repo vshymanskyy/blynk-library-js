@@ -12,6 +12,11 @@ var C = {
 /*
  * Helpers
  */
+function string_of_enum(e,value) 
+{
+  for (var k in e) if (e[k] == value) return k;
+  return "Unknown(" + value + ")";
+}
 
 function isEspruino() {
   if (typeof process === 'undefined') return false;
@@ -60,7 +65,8 @@ var MsgType = {
 
 var MsgStatus = {
   OK                    :  200,
-  ILLEGAL_COMMAND       :  2
+  ILLEGAL_COMMAND       :  2,
+  INVALID_TOKEN         :  9
 };
 
 var BlynkState = {
@@ -369,14 +375,19 @@ Blynk.prototype.onReceive = function(data) {
     if (msg_type === MsgType.RSP) {
       //console.log('> ', msg_type, msg_id, string_of_enum(MsgStatus, msg_len), ' ! ');
 if (!self.profile) {
-      if (self.timerConn && msg_id === 1 && msg_len === MsgStatus.OK) {
-        clearInterval(self.timerConn);
-        self.timerConn = null;
-        self.timerHb = setInterval(function() {
-          //console.log('Heartbeat');
-          self.sendMsg(MsgType.PING, null);
-        }, self.heartbeat);
-        self.emit('connect');
+      if (self.timerConn && msg_id === 1) {
+        if (msg_len === MsgStatus.OK) {
+          clearInterval(self.timerConn);
+          self.timerConn = null;
+          self.timerHb = setInterval(function() {
+            //console.log('Heartbeat');
+            self.sendMsg(MsgType.PING, null);
+          }, self.heartbeat);
+          console.log('Authorized');
+          self.emit('connect');
+        } else {
+          console.log('Could not login:', string_of_enum(MsgStatus, msg_len));
+        }
       }
 }
       self.buff_in = self.buff_in.substr(5);

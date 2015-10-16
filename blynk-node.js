@@ -152,7 +152,11 @@ exports.SslClient = function(options) {
     
     console.log("Connecting to SSL:", self.addr, self.port);
     self.sock = tls.connect(self.port, self.addr, opts, function() {
-      console.log('Connected,', self.sock.authorized ? 'authorized' : 'unauthorized');
+      if (!self.sock.authorized) {
+        console.log('SSL not authorized');
+        return;
+      }
+      console.log('Connected');
       self.sock.setNoDelay(true);
       self.sock.setEncoding('binary');
       self.sock.on('data', function(data) {
