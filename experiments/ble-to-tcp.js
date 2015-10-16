@@ -351,6 +351,7 @@ noble.on('discover', function(peripheral) {
         peripheral.on('disconnect', function() {
           console.log('BLE disconnect', uuid);
           delete peripherals[uuid];
+          ble_ser = null;
           tcp_conn.end();
           setTimeout(function() {
             noble.startScanning();
