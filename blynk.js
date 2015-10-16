@@ -149,8 +149,9 @@ if (isEspruino()) {
   };
 
   var BoardEspruinoPico = function(values) {
+    var self = this;
     this.init = function(blynk) {
-      this.blynk = blynk;
+      self.blynk = blynk;
     };
     this.process = function(values) {
       switch(values[0]) {
@@ -167,7 +168,7 @@ if (isEspruino()) {
           break;
         case 'dr':
           var pin = Pin(values[1]);
-          this.blynk.sendMsg(MsgType.HW, null, ['dw', values[1], digitalRead(pin)]);
+          self.blynk.sendMsg(MsgType.HW, null, ['dw', values[1], digitalRead(pin)]);
           break;
         case 'aw':
           var pin = Pin(values[1]);
@@ -177,7 +178,7 @@ if (isEspruino()) {
           break;
         case 'ar':
           var pin = Pin(values[1]);
-          this.blynk.sendMsg(MsgType.HW, null, ['aw', values[1], 4095 * analogRead(pin)]);
+          self.blynk.sendMsg(MsgType.HW, null, ['aw', values[1], 4095 * analogRead(pin)]);
           break;
         default:
           return null;
@@ -187,8 +188,9 @@ if (isEspruino()) {
   };
 
   var BoardEspruinoLinux = function(values) {
+    var self = this;
     this.init = function(blynk) {
-      this.blynk = blynk;
+      self.blynk = blynk;
     };
     this.process = function(values) {
       switch(values[0]) {
@@ -205,7 +207,7 @@ if (isEspruino()) {
           break;
         case 'dr':
           var pin = Pin('D' + values[1]);
-          this.blynk.sendMsg(MsgType.HW, null, ['dw', values[1], digitalRead(pin)]);
+          self.blynk.sendMsg(MsgType.HW, null, ['dw', values[1], digitalRead(pin)]);
           break;
         case 'aw':
         case 'ar':
@@ -223,9 +225,7 @@ if (isEspruino()) {
  */
 
 var BoardDummy = function() {
-  this.init = function(blynk) {
-    this.blynk = blynk;
-  };
+  this.init = function(blynk) {};
   this.process = function(values) {
     switch (values[0]) {
     case 'info':

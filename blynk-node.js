@@ -244,10 +244,11 @@ var scale = function(value, inMin, inMax, outMin, outMax) {
 }
 
 exports.BoardMRAA = function() {
+  var self = this;
   var mraa = require('mraa');
   console.log('MRAA Version: ' + mraa.getVersion());
   this.init = function(blynk) {
-    this.blynk = blynk;
+    self.blynk = blynk;
   };
   this.process = function(values) {
     switch(values[0]) {
@@ -269,11 +270,11 @@ exports.BoardMRAA = function() {
       case 'dr': {
         var pin = new mraa.Gpio(parseInt(values[1]));
         pin.dir(mraa.DIR_IN);
-        this.blynk.sendMsg(MsgType.HW, null, ['dw', values[1], pin.read()]);
+        self.blynk.sendMsg(MsgType.HW, null, ['dw', values[1], pin.read()]);
       } break;
       case 'ar': {
         var pin = new mraa.Aio(parseInt(values[1])-14); // TODO
-        this.blynk.sendMsg(MsgType.HW, null, ['aw', values[1], pin.read()]);
+        self.blynk.sendMsg(MsgType.HW, null, ['aw', values[1], pin.read()]);
       } break;
       default:
         return false;
@@ -283,10 +284,11 @@ exports.BoardMRAA = function() {
 };
 
 exports.BoardOnOff = function() {
+  var self = this;
   var Gpio = require('onoff').Gpio;
   console.log("OnOff mode");
   this.init = function(blynk) {
-    this.blynk = blynk;
+    self.blynk = blynk;
   };
   this.process = function(values) {
     switch(values[0]) {
@@ -302,7 +304,7 @@ exports.BoardOnOff = function() {
         var pin = new Gpio(values[1], 'in');
         pin.read(function(err, value) {
           if (!err) {
-            this.blynk.sendMsg(MsgType.HW, null, ['dw', values[1], value]);
+            self.blynk.sendMsg(MsgType.HW, null, ['dw', values[1], value]);
           }
         });
         break;
