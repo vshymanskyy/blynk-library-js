@@ -11,39 +11,37 @@ if (!process.argv[2]) {
 var blynk = new Blynk.Blynk(process.argv[2]);
 
 // Mouse control
-var dx = 0,
-    dy = 0;
+var delta_x = 0,
+    delta_y = 0;
+var cur_x = 0,
+    cur_y = 0;
 var tmr = 0;
 
 robot.setMouseDelay(2);
 
-function mouseMover() {
-  var mousePos = robot.getMousePos();
-  mousePos.x += dx;
-  mousePos.y += dy;
-  robot.moveMouse(mousePos.x, mousePos.y);
-}
-
 function deadZone(d) {
   var sign = d?d<0?-1:1:0;
-  return (Math.abs(d) < 5) ? 0 : d - 5*sign;
+  return (Math.abs(d) < 50) ? 0 : (d - 50*sign)/10;
 }
 
 var v1 = new blynk.VirtualPin(1);
 v1.on('write', function(param) {
-  dx = parseInt(param[0]);
-  dy = -parseInt(param[1]);
-  dx = deadZone(dx);
-  dy = deadZone(dy);
-  if ((dx != 0 || dy != 0) && tmr == 0) {
-    tmr = setInterval(mouseMover, 50);
-    mouseMover();
-  } else if (dx == 0 && dy == 0 && tmr != 0) {
+  delta_x = deadZone(parseInt(param[0]));
+  delta_y = deadZone(-parseInt(param[1]));
+  if ((delta_x != 0 || delta_y != 0) && tmr == 0) {
+    var mousePos = robot.getMousePos();
+    cur_x = mousePos.x;
+    cur_y = mousePos.y;
+    tmr = setInterval(function() {
+      robot.moveMouse(cur_x += delta_x, cur_y += delta_y);
+    }, 30);
+  } else if (delta_x == 0 && delta_y == 0 && tmr != 0) {
     clearInterval(tmr);
     tmr = 0;
   }
 });
 
+// Mouse left button
 var v2 = new blynk.VirtualPin(2);
 v2.on('write', function(param) {
   if (param[0]==1) {
@@ -53,6 +51,7 @@ v2.on('write', function(param) {
   }
 });
 
+// Mouse right button
 var v3 = new blynk.VirtualPin(3);
 v3.on('write', function(param) {
   if (param[0]==1) {
@@ -76,14 +75,14 @@ var key_mapping = {
 };
 
 // Generate virtual pins to control different keys
-Object.keys(key_mapping).forEach(function(key) {
-  var vpin_num = key_mapping[key];
+Object.keys(key_mapping).forEach(function(key_name) {
+  var vpin_num = key_mapping[key_name];
   var vpin = new blynk.VirtualPin(vpin_num);
   vpin.on('write', function(param) {
     if (param[0] == 1) {
-      robot.keyToggle(key, "down");
+      robot.keyToggle(key_name, "down");
     } else {
-      robot.keyToggle(key, "up");
+      robot.keyToggle(key_name, "up");
     }
   });
 });
