@@ -236,6 +236,7 @@ var BoardDummy = function() {
     switch (values[0]) {
     case 'info':
     case 'pm':
+      return true;
     case 'dw':
     case 'dr':
     case 'aw':
