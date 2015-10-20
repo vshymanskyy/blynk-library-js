@@ -64,8 +64,8 @@ v3.on('write', function(param) {
 // Keyboard
 
 var key_mapping = {
-  "page_up"         : 5,
-  "page_down"       : 6,
+  "pageup"         : 5,
+  "pagedown"       : 6,
   
   "audio_vol_up"    : 7,
   "audio_vol_down"  : 8,
