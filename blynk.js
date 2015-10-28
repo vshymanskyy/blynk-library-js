@@ -395,7 +395,9 @@ Blynk.prototype.onReceive = function(data) {
 				  	clearInterval(self.timerConn);
 	          		self.timerConn = null;
 	          	}
-	          	console.log('Disconnecting');
+	          	//letting main app know why we failed
+	          	this.emit('error', string_of_enum(MsgStatus, msg_len));
+	          	//console.log('Disconnecting');
 			  	self.disconnect();
 	          }
 	        }
@@ -494,8 +496,9 @@ Blynk.prototype.connect = function() {
   self.disconnect();
   var doConnect = function() {
     self.conn.connect(function() {
-      self.conn.on('data', function(data) { self.onReceive(data); });
-      self.conn.on('end',  function()     { self.disconnect();    });
+      self.conn.on('data', function(data) { self.onReceive(data); 				});
+      self.conn.on('end',  function()     { /*retrying*/		self.connect();	});
+      self.conn.on('error', function(err) { self.error(err);		  			});
       self.sendRsp(MsgType.LOGIN, 1, self.auth.length, self.auth);
     });
   };
@@ -515,6 +518,16 @@ Blynk.prototype.disconnect = function() {
     this.timerHb = null;
   }
   this.emit('disconnect');
+  //cleanup to avoid multiplying listeners
+  this.removeAllListeners();
+};
+
+Blynk.prototype.error = function(err) {
+  //if we throw error and user doesn't handle it, app crashes. is it worth it?
+  //this.emit('error', err);
+  console.error(err);
+  //starting reconnect procedure
+  this.connect();
 };
 
 Blynk.prototype.virtualWrite = function(pin, value) {

@@ -165,6 +165,9 @@ exports.SslClient = function(options) {
       self.sock.on('end', function(data) {
         self.emit('end', data);
       });
+      self.sock.on('error', function(err) {
+        self.emit('error', err);
+      });
       done();
     });
   };
