@@ -375,22 +375,34 @@ Blynk.prototype.onReceive = function(data) {
 
     if (msg_type === MsgType.RSP) {
       //console.log('> ', msg_type, msg_id, string_of_enum(MsgStatus, msg_len), ' ! ');
-if (!self.profile) {
-      if (self.timerConn && msg_id === 1) {
-        if (msg_len === MsgStatus.OK) {
-          clearInterval(self.timerConn);
-          self.timerConn = null;
-          self.timerHb = setInterval(function() {
-            //console.log('Heartbeat');
-            self.sendMsg(MsgType.PING, null);
-          }, self.heartbeat);
-          console.log('Authorized');
-          self.emit('connect');
-        } else {
-          console.log('Could not login:', string_of_enum(MsgStatus, msg_len));
-        }
-      }
-}
+	  if (!self.profile) {
+	      if (self.timerConn && msg_id === 1) {
+	        if (msg_len === MsgStatus.OK) {
+	          clearInterval(self.timerConn);
+	          self.timerConn = null;
+	          self.timerHb = setInterval(function() {
+	            //console.log('Heartbeat');
+	            self.sendMsg(MsgType.PING, null);
+	          }, self.heartbeat);
+	          console.log('Authorized');
+	          self.emit('connect');
+	        } else {
+	          console.log('Could not login:', string_of_enum(MsgStatus, msg_len));
+	          //if invalid token, no point in trying to reconnect
+	          if (msg_len === MsgStatus.INVALID_TOKEN) {
+	          	if(self.timerConn) {
+		          	//clear connecting timer
+				  	clearInterval(self.timerConn);
+	          		self.timerConn = null;
+	          	}
+	          	//letting main app know why we failed
+	          	this.emit('error', string_of_enum(MsgStatus, msg_len));
+	          	//console.log('Disconnecting');
+			  	self.disconnect();
+	          }
+	        }
+	      }
+	  }
       self.buff_in = self.buff_in.substr(5);
       continue;
     }
@@ -483,11 +495,17 @@ Blynk.prototype.connect = function() {
   var self = this;
   self.disconnect();
   var doConnect = function() {
+  	if(self.conn) {
+	  //cleanup events
+	  self.conn.removeAllListeners();
+  	}
     self.conn.connect(function() {
-      self.conn.on('data', function(data) { self.onReceive(data); });
-      self.conn.on('end',  function()     { self.disconnect();    });
+      self.conn.on('data', function(data) { self.onReceive(data); 	});
+      self.conn.on('end',  function()     { self.disconnect();		});
+
       self.sendRsp(MsgType.LOGIN, 1, self.auth.length, self.auth);
     });
+    self.conn.on('error', function(err) { self.error(err);		  			});
   };
 
   if (self.profile) {
@@ -499,12 +517,26 @@ Blynk.prototype.connect = function() {
 };
 
 Blynk.prototype.disconnect = function() {
+  //console.log('Disconnect blynk');
   this.conn.disconnect();
   if (this.timerHb) {
     clearInterval(this.timerHb);
     this.timerHb = null;
   }
   this.emit('disconnect');
+  //cleanup to avoid multiplying listeners
+  this.conn.removeAllListeners();
+};
+
+Blynk.prototype.error = function(err) {
+  var self = this;
+  //if we throw error and user doesn't handle it, app crashes. is it worth it?
+  //this.emit('error', err);
+  console.error('Error', err.code);
+  //starting reconnect procedure if not already in connecting loop
+  if(!self.timerConn) {
+    setTimeout(function () {self.connect()}, 5000);
+  }
 };
 
 Blynk.prototype.virtualWrite = function(pin, value) {

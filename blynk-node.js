@@ -50,11 +50,17 @@ exports.TcpClient = function(options) {
       });
       done();
     });
+    self.sock.on('error', function(err) {
+    	//console.log('error', err.code);
+        self.emit('error', err);
+    });
+
   };
 
   this.disconnect = function() {
     if (self.sock) {
       self.sock.destroy();
+      self.sock.removeAllListeners();
       self.sock = null;
     }
   };
@@ -165,14 +171,22 @@ exports.SslClient = function(options) {
       self.sock.on('end', function(data) {
         self.emit('end', data);
       });
+      
       done();
+    });
+
+    self.sock.on('error', function(err) {
+    	//console.log('error', err.code);
+        self.emit('error', err);
     });
   };
 
   this.disconnect = function() {
     if (self.sock) {
       self.sock.destroy();
+      self.sock.removeAllListeners();
       self.sock = null;
+      
     }
   };
 };
