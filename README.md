@@ -2,7 +2,8 @@
 
 Implementations for other platforms:
 * [Arduino](https://github.com/blynkkk/blynk-library)
-* [Particle Core](https://github.com/vshymanskyy/blynk-library-spark)
+* [Particle](https://github.com/vshymanskyy/blynk-library-spark)
+* [MicroPython WiPy](https://github.com/wipy/wipy/tree/master/lib/blynk)
 
 __________
 
