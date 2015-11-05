@@ -272,21 +272,21 @@ BleBeanSerial.prototype.requestTemp = function(done) {
 
 var dev_service_uuids = {
   '713d0000503e4c75ba943148f18d941e': {
-    name : 'mbed NRF51822',
+    name : 'mbed nRF51822',
     create: BleRawSerial,
     options: {
       uuid_svc:'713d0000503e4c75ba943148f18d941e',
-      uuid_tx: '713d0003503e4c75ba943148f18d941e',
-      uuid_rx: '713d0002503e4c75ba943148f18d941e'
+      uuid_rx: '713d0002503e4c75ba943148f18d941e',
+      uuid_tx: '713d0003503e4c75ba943148f18d941e'
     }
   },
   '6e400001b5a3f393e0a9e50e24dcca9e': {
-    name : 'Nordic NRF8001 Serial',
+    name : 'Nordic nRF8001 Serial',
     create: BleRawSerial,
     options: {
       uuid_svc:'6e400001b5a3f393e0a9e50e24dcca9e',
-      uuid_tx: '6e400002b5a3f393e0a9e50e24dcca9e',
-      uuid_rx: '6e400003b5a3f393e0a9e50e24dcca9e'
+      uuid_rx: '6e400002b5a3f393e0a9e50e24dcca9e',
+      uuid_tx: '6e400003b5a3f393e0a9e50e24dcca9e'
     }
   },
   'a495ff10c5b14b44b5121370f02d74de': {
@@ -318,16 +318,18 @@ noble.on('discover', function(peripheral) {
   var name = peripheral.advertisement.localName;
   var uuid = peripheral.uuid;
   var addr = peripheral.address;
+  var addrType = peripheral.addressType;
   var rssi = peripheral.rssi;
-  console.log(util.format('Discovered %s [addr: %s, uuid: %s, rssi: %d]', name, addr, uuid, rssi));
+  console.log(util.format('Discovered %s [addr: %s (%s) uuid: %s, rssi: %d]', name, addr, addrType, uuid, rssi));
 
   peripheral.advertisement.serviceUuids.forEach(function(service) {
     var svc = dev_service_uuids[service];
     if (svc !== undefined) {
+      noble.stopScanning();
       console.log("Device type:", svc.name);
 
       peripheral.connect(function(err) {
-        if (err) throw err;          
+        if (err) throw err;
         peripherals[uuid] = peripheral;
         
 
