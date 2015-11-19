@@ -340,6 +340,17 @@ var Blynk = function(auth, options) {
       self.virtualWrite(this.pin, data);
     };
   };
+  
+  this.WidgetLCD = function(vPin) {
+    this.pin = vPin;
+
+    this.clear = function() {
+      self.virtualWrite(this.pin, 'clr');
+    };
+    this.print = function(x, y, val) {
+      self.sendMsg(MsgType.HW, null, ['vw', this.pin, 'p', x, y, val]);
+    };
+  };
 
   if (needsEmitter()) {
     util.inherits(this.VirtualPin, events.EventEmitter);
