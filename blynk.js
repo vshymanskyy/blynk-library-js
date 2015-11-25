@@ -512,11 +512,11 @@ Blynk.prototype.connect = function() {
   	}
     self.conn.connect(function() {
       self.conn.on('data', function(data) { self.onReceive(data); 	});
-      self.conn.on('end',  function()     { self.disconnect();		});
+      self.conn.on('end',  function()     { self.end();				});
 
       self.sendRsp(MsgType.LOGIN, 1, self.auth.length, self.auth);
     });
-    self.conn.on('error', function(err) { self.error(err);		  			});
+    self.conn.on('error', function(err) { self.error(err);		  	});
   };
 
   if (self.profile) {
@@ -549,6 +549,17 @@ Blynk.prototype.error = function(err) {
     setTimeout(function () {self.connect()}, 5000);
   }
 };
+
+Blynk.prototype.end = function() {
+  var self = this;
+  //console.error('End');
+  self.disconnect();
+  //starting reconnect procedure if not already in connecting loop
+  if(!self.timerConn) {
+    setTimeout(function () {self.connect()}, 5000);
+  }
+};
+
 
 Blynk.prototype.virtualWrite = function(pin, value) {
   this.sendMsg(MsgType.HW, null, ['vw', pin, value]);
