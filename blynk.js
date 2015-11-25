@@ -351,6 +351,20 @@ var Blynk = function(auth, options) {
       self.sendMsg(MsgType.HW, null, ['vw', this.pin, 'p', x, y, val]);
     };
   };
+  
+  this.WidgetLED = function(vPin) {
+    this.pin = vPin;
+
+    this.setValue = function(val) {
+      self.virtualWrite(this.pin, val);
+    };
+    this.turnOn = function() {
+      self.virtualWrite(this.pin, 255);
+    };
+    this.turnOff = function() {
+      self.virtualWrite(this.pin, 0);
+    };
+  };
 
   if (needsEmitter()) {
     util.inherits(this.VirtualPin, events.EventEmitter);
