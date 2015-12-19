@@ -415,15 +415,16 @@ Blynk.prototype.onReceive = function(data) {
 	          console.log('Could not login:', string_of_enum(MsgStatus, msg_len));
 	          //if invalid token, no point in trying to reconnect
 	          if (msg_len === MsgStatus.INVALID_TOKEN) {
+	          	//letting main app know why we failed
+	          	this.emit('error', string_of_enum(MsgStatus, msg_len));
+	          	//console.log('Disconnecting because of invalid token');
+			  	self.disconnect();
 	          	if(self.timerConn) {
 		          	//clear connecting timer
+		          	console.log('clear conn timer');
 				  	clearInterval(self.timerConn);
 	          		self.timerConn = null;
 	          	}
-	          	//letting main app know why we failed
-	          	this.emit('error', string_of_enum(MsgStatus, msg_len));
-	          	//console.log('Disconnecting');
-			  	self.disconnect();
 	          }
 	        }
 	      }
@@ -518,7 +519,7 @@ Blynk.prototype.sendMsg = function(msg_type, msg_id, values) {
 
 Blynk.prototype.connect = function() {
   var self = this;
-  self.disconnect();
+
   var doConnect = function() {
   	if(self.conn) {
 	  //cleanup events
@@ -541,8 +542,13 @@ Blynk.prototype.connect = function() {
   }
 };
 
-Blynk.prototype.disconnect = function() {
-  //console.log('Disconnect blynk');
+Blynk.prototype.disconnect = function(reconnect) {
+  console.log('Disconnect blynk');
+  if(typeof reconnect === 'undefined' ) {
+	  reconnect = true;
+  }
+  
+  var self = this;
   this.conn.disconnect();
   if (this.timerHb) {
     clearInterval(this.timerHb);
@@ -551,27 +557,28 @@ Blynk.prototype.disconnect = function() {
   this.emit('disconnect');
   //cleanup to avoid multiplying listeners
   this.conn.removeAllListeners();
+  
+  //starting reconnect procedure if not already in connecting loop and reconnect is true
+  if(reconnect && !self.timerConn) {
+    console.log("REARMING DISCONNECT");
+    setTimeout(function () {self.connect()}, 5000);
+  }
 };
 
 Blynk.prototype.error = function(err) {
   var self = this;
   //if we throw error and user doesn't handle it, app crashes. is it worth it?
-  //this.emit('error', err);
+  this.emit('error', err.code?err.code:'ERROR');
   console.error('Error', err.code);
   //starting reconnect procedure if not already in connecting loop
   if(!self.timerConn) {
-    setTimeout(function () {self.connect()}, 5000);
+	  setTimeout(function () {self.connect()}, 5000);
   }
 };
 
 Blynk.prototype.end = function() {
   var self = this;
-  //console.error('End');
   self.disconnect();
-  //starting reconnect procedure if not already in connecting loop
-  if(!self.timerConn) {
-    setTimeout(function () {self.connect()}, 5000);
-  }
 };
 
 
