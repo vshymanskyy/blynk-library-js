@@ -26,6 +26,11 @@ If you need more information, please follow these links:
 * [Blynk + JavaScript in 20 minutes (Raspberry Pi, Edison, Espruino...)](http://www.instructables.com/id/Blynk-JavaScript-in-20-minutes-Raspberry-Pi-Edison/)
 * [Raspberry Pi + DHT11/DHT22/AM2302](http://www.instructables.com/id/Raspberry-Pi-Nodejs-Blynk-App-DHT11DHT22AM2302/)
 
+## Install
+```
+npm install blynk-library
+```
+
 ## Usage example:
 ```js
 var BlynkLib = require('blynk-library');
