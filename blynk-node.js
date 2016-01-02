@@ -270,8 +270,6 @@ exports.BoardMRAA = function() {
   };
   this.process = function(values) {
     switch(values[0]) {
-      case 'info':
-        break;
       case 'pm':
         break;
       case 'dw': {
@@ -310,8 +308,6 @@ exports.BoardOnOff = function() {
   };
   this.process = function(values) {
     switch(values[0]) {
-      case 'info':
-        break;
       case 'pm':
         break;
       case 'dw':

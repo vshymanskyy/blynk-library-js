@@ -60,6 +60,8 @@ var MsgType = {
   EMAIL         :  13,
   NOTIFY        :  14,
   BRIDGE        :  15,
+  HW_SYNC       :  16,
+  HW_INFO       :  17,
   HW            :  20
 };
 
@@ -161,8 +163,6 @@ if (isEspruino()) {
     };
     this.process = function(values) {
       switch(values[0]) {
-        case 'info':
-          break;
         case 'pm':
           // TODO
           break;
@@ -174,7 +174,7 @@ if (isEspruino()) {
           break;
         case 'dr':
           var pin = Pin(values[1]);
-          self.blynk.sendMsg(MsgType.HW, null, ['dw', values[1], digitalRead(pin)]);
+          self.blynk.sendMsg(MsgType.HW, ['dw', values[1], digitalRead(pin)]);
           break;
         case 'aw':
           var pin = Pin(values[1]);
@@ -184,7 +184,7 @@ if (isEspruino()) {
           break;
         case 'ar':
           var pin = Pin(values[1]);
-          self.blynk.sendMsg(MsgType.HW, null, ['aw', values[1], 4095 * analogRead(pin)]);
+          self.blynk.sendMsg(MsgType.HW, ['aw', values[1], 4095 * analogRead(pin)]);
           break;
         default:
           return null;
@@ -200,8 +200,6 @@ if (isEspruino()) {
     };
     this.process = function(values) {
       switch(values[0]) {
-        case 'info':
-          break;
         case 'pm':
           // TODO
           break;
@@ -213,7 +211,7 @@ if (isEspruino()) {
           break;
         case 'dr':
           var pin = Pin('D' + values[1]);
-          self.blynk.sendMsg(MsgType.HW, null, ['dw', values[1], digitalRead(pin)]);
+          self.blynk.sendMsg(MsgType.HW, ['dw', values[1], digitalRead(pin)]);
           break;
         case 'aw':
         case 'ar':
@@ -234,7 +232,6 @@ var BoardDummy = function() {
   this.init = function(blynk) {};
   this.process = function(values) {
     switch (values[0]) {
-    case 'info':
     case 'pm':
       return true;
     case 'dw':
@@ -316,16 +313,16 @@ var Blynk = function(auth, options) {
     this.pin = vPin;
 
     this.setAuthToken = function(token) {
-      self.sendMsg(MsgType.BRIDGE, null, [this.pin, 'i', token]);
+      self.sendMsg(MsgType.BRIDGE, [this.pin, 'i', token]);
     };
     this.digitalWrite = function(pin, val) {
-      self.sendMsg(MsgType.BRIDGE, null, [this.pin, 'dw', pin, val]);
+      self.sendMsg(MsgType.BRIDGE, [this.pin, 'dw', pin, val]);
     };
     this.analogWrite = function(pin, val) {
-      self.sendMsg(MsgType.BRIDGE, null, [this.pin, 'aw', pin, val]);
+      self.sendMsg(MsgType.BRIDGE, [this.pin, 'aw', pin, val]);
     };
     this.virtualWrite = function(pin, val) {
-      self.sendMsg(MsgType.BRIDGE, null, [this.pin, 'vw', pin, val]);
+      self.sendMsg(MsgType.BRIDGE, [this.pin, 'vw', pin, val]);
     };
   };
 
@@ -348,7 +345,7 @@ var Blynk = function(auth, options) {
       self.virtualWrite(this.pin, 'clr');
     };
     this.print = function(x, y, val) {
-      self.sendMsg(MsgType.HW, null, ['vw', this.pin, 'p', x, y, val]);
+      self.sendMsg(MsgType.HW, ['vw', this.pin, 'p', x, y, val]);
     };
   };
   
@@ -407,9 +404,10 @@ Blynk.prototype.onReceive = function(data) {
 	          self.timerConn = null;
 	          self.timerHb = setInterval(function() {
 	            //console.log('Heartbeat');
-	            self.sendMsg(MsgType.PING, null);
+	            self.sendMsg(MsgType.PING);
 	          }, self.heartbeat);
 	          console.log('Authorized');
+	          //TODO: self.sendMsg(MsgType.HW_INFO, ['ver', 'v0.0.0', 'dev', 'js']);
 	          self.emit('connect');
 	        } else {
 	          console.log('Could not login:', string_of_enum(MsgStatus, msg_len));
@@ -501,13 +499,13 @@ Blynk.prototype.sendRsp = function(msg_type, msg_id, msg_len, data) {
       clearInterval(self.timerHb);
       self.timerHb = setInterval(function(){
         //console.log('Heartbeat');
-        self.sendMsg(MsgType.PING, null);
+        self.sendMsg(MsgType.PING);
       }, self.heartbeat);
     }
   }*/
 };
 
-Blynk.prototype.sendMsg = function(msg_type, msg_id, values) {
+Blynk.prototype.sendMsg = function(msg_type, values, msg_id) {
   var values = values || [''];
   var data = values.join('\0');
   this.sendRsp(msg_type, msg_id, data.length, data);
@@ -583,19 +581,28 @@ Blynk.prototype.end = function() {
 
 
 Blynk.prototype.virtualWrite = function(pin, value) {
-  this.sendMsg(MsgType.HW, null, ['vw', pin, value]);
+  this.sendMsg(MsgType.HW, ['vw', pin, value]);
 };
 
+Blynk.prototype.syncAll = function() {
+  this.sendMsg(MsgType.HW_SYNC);
+};
+
+Blynk.prototype.syncVirtual = function(pin) {
+  this.sendMsg(MsgType.HW_SYNC, ['vr', pin]);
+};
+
+
 Blynk.prototype.email = function(to, topic, message) {
-  this.sendMsg(MsgType.EMAIL, null, [to, topic, message]);
+  this.sendMsg(MsgType.EMAIL, [to, topic, message]);
 };
 
 Blynk.prototype.notify = function(message) {
-  this.sendMsg(MsgType.NOTIFY, null, [message]);
+  this.sendMsg(MsgType.NOTIFY, [message]);
 };
 
 Blynk.prototype.tweet = function(message) {
-  this.sendMsg(MsgType.TWEET, null, [message]);
+  this.sendMsg(MsgType.TWEET, [message]);
 };
 
 
