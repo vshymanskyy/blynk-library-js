@@ -1,0 +1,12 @@
+Package: blynk-library-js
+Version: 0.0.26
+Description: Blynk library implementation for JavaScript (Node.js, Espruino)
+Section: extras
+Priority: optional
+Maintainer: Volodymyr Shymanskyy
+License: MIT
+Architecture: all
+OE: blynk-library-js
+Homepage: https://github.com/vshymanskyy/blynk-library-js
+Depends: nodejs
+Source:  N/A
