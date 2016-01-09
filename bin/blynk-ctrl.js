@@ -58,7 +58,7 @@ parser.addArgument(['--dump'],         { action:"storeTrue",  dest:'dump',      
 
 
 var args = parser.parseArgs();
-console.dir(args);
+//console.dir(args);
 
 var Blynk = require("../");
 var blynk = new Blynk.Blynk(args['token']);
