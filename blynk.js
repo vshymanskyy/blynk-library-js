@@ -322,7 +322,7 @@ var Blynk = function(auth, options) {
       self.sendMsg(MsgType.BRIDGE, [this.pin, 'aw', pin, val]);
     };
     this.virtualWrite = function(pin, val) {
-      self.sendMsg(MsgType.BRIDGE, [this.pin, 'vw', pin].concat(value));
+      self.sendMsg(MsgType.BRIDGE, [this.pin, 'vw', pin].concat(val));
     };
   };
 
@@ -580,8 +580,8 @@ Blynk.prototype.end = function() {
 };
 
 
-Blynk.prototype.virtualWrite = function(pin, value) {
-  this.sendMsg(MsgType.HW, ['vw', pin].concat(value));
+Blynk.prototype.virtualWrite = function(pin, val) {
+  this.sendMsg(MsgType.HW, ['vw', pin].concat(val));
 };
 
 Blynk.prototype.syncAll = function() {
