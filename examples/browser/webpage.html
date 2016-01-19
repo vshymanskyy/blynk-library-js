@@ -14,29 +14,38 @@
 </head>
 
 <body>
-  <script src="../blynk-browser.js"></script>
-  <script src="../blynk.js"></script>
+  <div id="label">V1: </div>
+  
+  <script src="jquery.min.js"></script>
+  <script src="../../blynk-browser.js"></script>
+  <script src="../../blynk.js"></script>
+  
   <script type="text/javascript">
 
     var onInit = function() {
-      var blynk = new Blynk('715f8caae9bf4a91bae319d0376caa8d', options = {
+      var blynk = new Blynk('1863867b48b64fd3902583578e92fccc', options = {
         addr : "blynk-qa.cloudapp.net",
-        port : 8444
+        //port : 8082
       });
 
+      var v0 = new blynk.VirtualPin(0);
       var v1 = new blynk.VirtualPin(1);
       var v9 = new blynk.VirtualPin(9);
 
+      v0.on('write', function(param) {
+        document.getElementById("label").innerHTML = 'V1:' + param;
+      });
+      
       v1.on('write', function(param) {
-        alert('V1:' + param);
+        document.getElementById("label").innerHTML = 'V1:' + param;
       });
 
       v9.on('read', function() {
         v9.write(new Date().getSeconds());
       });
 
-      blynk.on('connect', function() { alert("Blynk ready."); });
-      blynk.on('disconnect', function() { alert("DISCONNECT"); });
+      blynk.on('connect', function() { console.log("Blynk ready."); });
+      blynk.on('disconnect', function() { console.log("DISCONNECT"); });
     };
 
     window.addEventListener("load", onInit, false);
