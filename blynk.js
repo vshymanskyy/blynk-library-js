@@ -264,6 +264,8 @@ var Blynk = function(auth, options) {
     this.board = options.board;
   } else if (isEspruino()) {
     this.board = new BoardEspruinoPico();
+  } else if (isBrowser()) {
+    this.board = new BoardDummy();
   } else {
     [
         bl_node.BoardMRAA,

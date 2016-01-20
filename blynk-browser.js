@@ -18,11 +18,14 @@ MicroEvent.prototype  = {
     for(var i = 0; i < this._events[event].length; i++){
       this._events[event][i].apply(this, Array.prototype.slice.call(arguments, 1));
     }
+  },
+  removeAllListeners : function(){
+    this._events = {};
   }
 };
 
 MicroEvent.mixin  = function(destObject){
-  var props = ['on', 'off', 'emit'];
+  var props = ['on', 'off', 'emit', 'removeAllListeners'];
   for(var i = 0; i < props.length; i ++){
     if( typeof destObject === 'function' ){
       destObject.prototype[props[i]]  = MicroEvent.prototype[props[i]];
@@ -33,16 +36,33 @@ MicroEvent.mixin  = function(destObject){
   return destObject;
 }
 
+if (!window.WebSocket) {
+  window.WebSocket = window.MozWebSocket;
+}
+
+function ab2str(buf) {
+  return String.fromCharCode.apply(null, new Uint8Array(buf));
+}
+
+function str2ab(str) {
+  var buf = new ArrayBuffer(str.length); // 2 bytes for each char
+  var bufView = new Uint8Array(buf);
+  for (var i=0, strLen=str.length; i < strLen; i++) {
+    bufView[i] = str.charCodeAt(i);
+  }
+  return buf;
+}
+
 var BlynkWsClient = function(options) {
   var self = this;
   
   var options = options || {};
   self.addr = options.addr || "cloud.blynk.cc";
-  self.port = options.port || 8440;
+  self.port = options.port || 8082;
 
   this.write = function(data) {
     if (self.sock) {
-      self.sock.send(data);
+      self.sock.send(str2ab(data));
     }
   };
 
@@ -51,10 +71,14 @@ var BlynkWsClient = function(options) {
       self.sock.close();
     }
     try {
-      self.sock = new WebSocket('ws://' + self.addr + ':' + self.port);
+      self.sock = new WebSocket('ws://' + self.addr + ':' + self.port + '/websocket');
+      self.sock.binaryType = 'arraybuffer';
       self.sock.onopen = function(evt) { done() };
       self.sock.onclose = function(evt) { self.emit('end'); };
-      self.sock.onmessage = function(evt) { self.emit('data', evt.data); };
+      self.sock.onmessage = function(evt) {
+        var data = ab2str(evt.data);
+        self.emit('data', data);
+      };
       self.sock.onerror = function(evt) { self.emit('end'); };
     } catch(exception){
       console.log(exception);

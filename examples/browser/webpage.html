@@ -14,41 +14,104 @@
 </head>
 
 <body>
-  <div id="label">V1: </div>
+
+  <form id="howto" action="">
+    <ol>
+      <li>Login with your account in the Blynk App</li>
+      <li>Add a new project using this QR code:<br>
+      <img src="project.png" width="256px" height="256px"></img>
+      </li>
+      <li>Go to project settings and send Auth Token to your email</li>
+      <li>Paste your Auth Token and connect!</li>
+    </ol>
+
+    Auth token: <input id="auth" type="text"> <input id="btnConnect" type="button" value="Connect"><br><br>  
+  </form>
   
+  <form id="control" action="">
+    ZeRGBa (V0): <label id="myZeRGBa">______</label><br>
+    Button (V1): <input id="myCheckbox" type="checkbox"><br>
+    <br>
+    
+    Send notification: <input id="notify" type="text"> <input id="btn" type="button" value="Notify"><br><br>
+    
+    Blynk status: <label id="status"></label><br>
+    <textarea id="output" style="width:500px;height:300px;"></textarea><br>
+    <input id="clear" type="button" value="Clear"><br>
+  </form>
+
+
   <script src="jquery.min.js"></script>
   <script src="../../blynk-browser.js"></script>
   <script src="../../blynk.js"></script>
   
   <script type="text/javascript">
-
-    var onInit = function() {
-      var blynk = new Blynk('1863867b48b64fd3902583578e92fccc', options = {
-        addr : "blynk-qa.cloudapp.net",
-        //port : 8082
+  
+    var log = function(msg) {
+      var output = $("#output");
+      output.val(output.val() + msg + "\n");
+      output.scrollTop(output[0].scrollHeight - output.height());
+    }
+    
+    var initBlynk = function() {
+      $("#control").show();
+      $("#howto").hide();
+    
+      var auth = $("#auth").val();
+      var blynk = new Blynk(auth, options = {
+        addr : "blynk-qa.cloudapp.net"
       });
 
       var v0 = new blynk.VirtualPin(0);
       var v1 = new blynk.VirtualPin(1);
-      var v9 = new blynk.VirtualPin(9);
 
       v0.on('write', function(param) {
-        document.getElementById("label").innerHTML = 'V1:' + param;
+        var r = param[0],
+            g = param[1],
+            b = param[2];
+        $('#myZeRGBa').css("background-color", "rgb(" + r + "," + g + "," + b + ")");
+        
+        log("ZeRGBa: " + r + "," + g + "," + b);
       });
       
       v1.on('write', function(param) {
-        document.getElementById("label").innerHTML = 'V1:' + param;
+        var isChecked = (param[0] == 1);
+        $('#myCheckbox').prop('checked', isChecked);
+        log("V1: " + isChecked);
+      });
+      
+      $('#myCheckbox').change(function(){
+        v1.write($(this).is(':checked') ? 1 : 0);
+      });
+            
+      $('#btn').click(function() {
+        var text = $('#notify').val();
+        blynk.notify(text);
+      });
+      
+      $('#clear').click(function() {
+        $("#output").val("");
       });
 
-      v9.on('read', function() {
-        v9.write(new Date().getSeconds());
+      blynk.on('connect', function() {
+        $("#status").text("Connected");
+        log("Blynk ready. Sending sync request...");
+        blynk.syncAll();
       });
-
-      blynk.on('connect', function() { console.log("Blynk ready."); });
-      blynk.on('disconnect', function() { console.log("DISCONNECT"); });
+      blynk.on('disconnect', function() {
+        $("#status").text("Disconnected");
+        log("Blynk disconnected.");
+      });
     };
 
-    window.addEventListener("load", onInit, false);
+    
+    $(function () {
+      $('#btnConnect').click(initBlynk);
+      $("#control").hide();
+      $("#output").val("");
+      $("#auth").val("");
+    });
+
   </script>
 </body>
 </html>
