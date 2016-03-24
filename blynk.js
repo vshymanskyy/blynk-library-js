@@ -121,7 +121,7 @@ if (isEspruino()) {
     var self = this;
 
     var options = options || {};
-    self.addr = options.addr || "cloud.blynk.cc";
+    self.addr = options.addr || "blynk-cloud.com";
     self.port = options.port || 8442;
 
     var net = require('net');
@@ -339,7 +339,7 @@ var Blynk = function(auth, options) {
       self.virtualWrite(this.pin, data);
     };
   };
-  
+
   this.WidgetLCD = function(vPin) {
     this.pin = vPin;
 
@@ -350,7 +350,7 @@ var Blynk = function(auth, options) {
       self.sendMsg(MsgType.HW, ['vw', this.pin, 'p', x, y, val]);
     };
   };
-  
+
   this.WidgetLED = function(vPin) {
     this.pin = vPin;
 
@@ -399,36 +399,36 @@ Blynk.prototype.onReceive = function(data) {
 
     if (msg_type === MsgType.RSP) {
       //console.log('> ', msg_type, msg_id, string_of_enum(MsgStatus, msg_len), ' ! ');
-	  if (!self.profile) {
-	      if (self.timerConn && msg_id === 1) {
-	        if (msg_len === MsgStatus.OK) {
-	          clearInterval(self.timerConn);
-	          self.timerConn = null;
-	          self.timerHb = setInterval(function() {
-	            //console.log('Heartbeat');
-	            self.sendMsg(MsgType.PING);
-	          }, self.heartbeat);
-	          console.log('Authorized');
-	          self.sendMsg(MsgType.HW_INFO, ['ver', 'v0.0.28', 'dev', 'js']);
-	          self.emit('connect');
-	        } else {
-	          console.log('Could not login:', string_of_enum(MsgStatus, msg_len));
-	          //if invalid token, no point in trying to reconnect
-	          if (msg_len === MsgStatus.INVALID_TOKEN) {
-	          	//letting main app know why we failed
-	          	this.emit('error', string_of_enum(MsgStatus, msg_len));
-	          	//console.log('Disconnecting because of invalid token');
-			  	self.disconnect();
-	          	if(self.timerConn) {
-		          	//clear connecting timer
-		          	console.log('clear conn timer');
-				  	clearInterval(self.timerConn);
-	          		self.timerConn = null;
-	          	}
-	          }
-	        }
-	      }
-	  }
+      if (!self.profile) {
+        if (self.timerConn && msg_id === 1) {
+          if (msg_len === MsgStatus.OK) {
+            clearInterval(self.timerConn);
+            self.timerConn = null;
+            self.timerHb = setInterval(function() {
+              //console.log('Heartbeat');
+              self.sendMsg(MsgType.PING);
+            }, self.heartbeat);
+            console.log('Authorized');
+            self.sendMsg(MsgType.HW_INFO, ['ver', 'v0.0.28', 'dev', 'js']);
+            self.emit('connect');
+          } else {
+            console.log('Could not login:', string_of_enum(MsgStatus, msg_len));
+            //if invalid token, no point in trying to reconnect
+            if (msg_len === MsgStatus.INVALID_TOKEN) {
+              //letting main app know why we failed
+              this.emit('error', string_of_enum(MsgStatus, msg_len));
+              //console.log('Disconnecting because of invalid token');
+              self.disconnect();
+              if(self.timerConn) {
+                //clear connecting timer
+                console.log('clear conn timer');
+                clearInterval(self.timerConn);
+                self.timerConn = null;
+              }
+            }
+          }
+        }
+      }
       self.buff_in = self.buff_in.substr(5);
       continue;
     }
@@ -521,17 +521,17 @@ Blynk.prototype.connect = function() {
   var self = this;
 
   var doConnect = function() {
-  	if(self.conn) {
-	  //cleanup events
-	  self.conn.removeAllListeners();
-  	}
+    if(self.conn) {
+      //cleanup events
+      self.conn.removeAllListeners();
+    }
     self.conn.connect(function() {
-      self.conn.on('data', function(data) { self.onReceive(data); 	});
-      self.conn.on('end',  function()     { self.end();				});
+      self.conn.on('data', function(data) { self.onReceive(data);     });
+      self.conn.on('end',  function()     { self.end();               });
 
       self.sendRsp(MsgType.LOGIN, 1, self.auth.length, self.auth);
     });
-    self.conn.on('error', function(err) { self.error(err);		  	});
+    self.conn.on('error', function(err) { self.error(err);            });
   };
 
   if (self.profile) {
@@ -545,9 +545,9 @@ Blynk.prototype.connect = function() {
 Blynk.prototype.disconnect = function(reconnect) {
   console.log('Disconnect blynk');
   if(typeof reconnect === 'undefined' ) {
-	  reconnect = true;
+    reconnect = true;
   }
-  
+
   var self = this;
   this.conn.disconnect();
   if (this.timerHb) {
@@ -557,7 +557,7 @@ Blynk.prototype.disconnect = function(reconnect) {
   this.emit('disconnect');
   //cleanup to avoid multiplying listeners
   this.conn.removeAllListeners();
-  
+
   //starting reconnect procedure if not already in connecting loop and reconnect is true
   if(reconnect && !self.timerConn) {
     console.log("REARMING DISCONNECT");
@@ -572,7 +572,7 @@ Blynk.prototype.error = function(err) {
   console.error('Error', err.code);
   //starting reconnect procedure if not already in connecting loop
   if(!self.timerConn) {
-	  setTimeout(function () {self.connect()}, 5000);
+    setTimeout(function () {self.connect()}, 5000);
   }
 };
 

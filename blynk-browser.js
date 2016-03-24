@@ -57,7 +57,7 @@ var BlynkWsClient = function(options) {
   var self = this;
   
   var options = options || {};
-  self.addr = options.addr || "cloud.blynk.cc";
+  self.addr = options.addr || "blynk-cloud.com";
   self.port = options.port || 8082;
 
   this.write = function(data) {
