@@ -21,7 +21,7 @@ exports.TcpClient = function(options) {
   events.EventEmitter.call(this);
 
   var options = options || {};
-  self.addr = options.addr || "cloud.blynk.cc";
+  self.addr = options.addr || "blynk-cloud.com";
   self.port = options.port || 8442;
 
   var net = require('net');
@@ -40,7 +40,11 @@ exports.TcpClient = function(options) {
     self.sock = new net.Socket();
     self.sock.setNoDelay(true);
     self.sock.setEncoding('binary');
-    self.sock.connect(self.port, self.addr, function() {
+    self.sock.connect({
+      host: self.addr,
+      family: 4,
+      port: self.port
+    }, function() {
       console.log('Connected');
       self.sock.on('data', function(data) {
         self.emit('data', data);
@@ -127,7 +131,7 @@ exports.SslClient = function(options) {
   
   var options = options || {};
   var certs_path = options.certs_path || default_certs_path;
-  self.addr = options.addr || "cloud.blynk.cc";
+  self.addr = options.addr || "blynk-cloud.com";
   self.port = options.port || 8441;
   // These are necessary only if using the client certificate authentication
   self.key  = options.key  || null;
@@ -136,6 +140,7 @@ exports.SslClient = function(options) {
   // This is necessary only if the server uses the self-signed certificate
   self.ca   = options.ca   || [ path.join(certs_path, 'server.crt') ];
   
+  var net = require('net');
   var tls = require('tls');
   var fs = require('fs');
 
@@ -150,34 +155,47 @@ exports.SslClient = function(options) {
       self.disconnect();
     }
 
-    var opts = {};
+    var opts = {
+      host: self.addr,
+      port: self.port,
+      family: 4
+    };
     if (self.key)  { opts.key  = fs.readFileSync(self.key); }
     if (self.cert) { opts.cert = fs.readFileSync(self.cert); }
     if (self.pass) { opts.passphrase = self.pass; }
     if (self.ca)   { opts.ca   = self.ca.map(fs.readFileSync); }
     
-    console.log("Connecting to SSL:", self.addr, self.port);
-    self.sock = tls.connect(self.port, self.addr, opts, function() {
-      if (!self.sock.authorized) {
-        console.log('SSL not authorized');
-        return;
-      }
-      console.log('Connected');
-      self.sock.setNoDelay(true);
-      self.sock.setEncoding('binary');
-      self.sock.on('data', function(data) {
-        self.emit('data', data);
+    console.log("Connecting to:", self.addr, self.port);
+    var sock = new net.Socket();
+    sock.connect({
+      host: self.addr,
+      family: 4,
+      port: self.port
+    }, function() {
+      console.log("SSL authorization...");
+      opts.socket = sock;
+      self.sock = tls.connect(opts, function() {
+        if (!self.sock.authorized) {
+          console.log('SSL not authorized');
+          return;
+        }
+        console.log('Connected');
+        self.sock.setNoDelay(true);
+        self.sock.setEncoding('binary');
+        self.sock.on('data', function(data) {
+          self.emit('data', data);
+        });
+        self.sock.on('end', function(data) {
+          self.emit('end', data);
+        });
+        
+        done();
       });
-      self.sock.on('end', function(data) {
-        self.emit('end', data);
-      });
-      
-      done();
-    });
 
-    self.sock.on('error', function(err) {
-    	//console.log('error', err.code);
-        self.emit('error', err);
+      self.sock.on('error', function(err) {
+          //console.log('error', err.code);
+          self.emit('error', err);
+      });
     });
   };
 
