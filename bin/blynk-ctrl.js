@@ -70,10 +70,10 @@ blynk.on('connect', function() {
     switch(op[0]) {
     case 'dw': bridge.digitalWrite(op[1], op[2]);  break;
     case 'aw': bridge.analogWrite (op[1], op[2]);  break;
-    case 'vw': bridge.virtualWrite(op[1], op[2]);  break;
-    //case 'dr': blynk.syncDigital(op[1]);           break;
-    //case 'ar': blynk.syncAnalog (op[1]);           break;
-    //case 'vr': blynk.syncVirtual(op[1]);           break;
+    case 'vw': bridge.virtualWrite(op[1], op.slice(2));  break;
+    case 'dr': blynk.syncDigital(op[1]);           break;
+    case 'ar': blynk.syncAnalog (op[1]);           break;
+    case 'vr': blynk.syncVirtual(op[1]);           break;
     }
   });
 });
