@@ -409,7 +409,7 @@ Blynk.prototype.onReceive = function(data) {
               self.sendMsg(MsgType.PING);
             }, self.heartbeat);
             console.log('Authorized');
-            self.sendMsg(MsgType.HW_INFO, ['ver', 'v0.0.29', 'dev', 'js']);
+            self.sendMsg(MsgType.HW_INFO, ['ver', 'v0.0.30', 'dev', 'js']);
             self.emit('connect');
           } else {
             console.log('Could not login:', string_of_enum(MsgStatus, msg_len));

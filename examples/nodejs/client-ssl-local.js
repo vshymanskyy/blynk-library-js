@@ -5,7 +5,7 @@ var Blynk = require('blynk-library');
 var AUTH = 'YOUR_AUTH_TOKEN';
 
 var blynk = new Blynk.Blynk(AUTH,
-  options= { addr:"192.168.0.101", port:8441 }
+  options= { addr:"127.0.0.1", port:8441 }
 );
 
 var v1 = new blynk.VirtualPin(1);

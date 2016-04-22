@@ -158,6 +158,8 @@ exports.SslClient = function(options) {
     var opts = {
       host: self.addr,
       port: self.port,
+      servername: self.addr,
+      rejectUnauthorized: false,
       family: 4
     };
     if (self.key)  { opts.key  = fs.readFileSync(self.key); }
