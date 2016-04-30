@@ -409,7 +409,12 @@ Blynk.prototype.onReceive = function(data) {
               self.sendMsg(MsgType.PING);
             }, self.heartbeat);
             console.log('Authorized');
-            self.sendMsg(MsgType.HW_INFO, ['ver', 'v0.0.30', 'dev', 'js']);
+            if (isNode()) {
+              var pack = require('./package.json');
+              self.sendMsg(MsgType.HW_INFO, ['ver', 'v' + pack.version, 'dev', 'js']);
+            } else {
+              self.sendMsg(MsgType.HW_INFO, ['dev', 'espruino']);              
+            }
             self.emit('connect');
           } else {
             console.log('Could not login:', string_of_enum(MsgStatus, msg_len));
@@ -537,7 +542,7 @@ Blynk.prototype.connect = function() {
   if (self.profile) {
     doConnect();
   } else {
-    self.timerConn = setInterval(doConnect, 5000);
+    self.timerConn = setInterval(doConnect, 10000);
     doConnect();
   }
 };

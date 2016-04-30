@@ -1,6 +1,6 @@
 {
   "name": "blynk-library",
-  "version": "0.0.30",
+  "version": "0.0.31",
   "description": "Blynk library implementation for JavaScript (Node.js, Espruino)",
   "main": "./blynk.js",
   "scripts": {
@@ -8,17 +8,19 @@
   },
   "bin": {
     "blynk-ctrl.js": "bin/blynk-ctrl.js",
+    "blynk-ble-connect.js": "bin/blynk-ble-connect.js",
+    "blynk-remote.js": "bin/blynk-remote.js",
     "blynk.js": "bin/blynk.js"
   },
   "engines": {
     "node": ">= 0.8.0"
   },
   "keywords": [
-    "IoT",
     "Arduino",
     "Espruino",
     "Raspberry Pi",
-    "Node.js"
+    "IoT",
+    "Internet of Things"
   ],
   "repository": {
     "type": "git",
@@ -28,6 +30,12 @@
     "url": "https://github.com/vshymanskyy/blynk-library-js/issues"
   },
   "dependencies": {
+  },
+  "optionalDependencies": {
+    "noble": "latest",
+    "robotjs": "latest",
+    "crc": "latest",
+    "open": "latest"
   },
   "author": "Volodymyr Shymanskyy",
   "license": "MIT"

@@ -4,6 +4,9 @@ var Blynk = require('blynk-library');
 var robot = require("robotjs");
 
 if (!process.argv[2]) {
+  var open = require('open');
+  open(__dirname + '/../docs/blynk-remote.html');
+
   console.log("Please specify auth token.");
   process.exit(1);
 }
