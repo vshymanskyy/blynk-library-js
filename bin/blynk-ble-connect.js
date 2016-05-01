@@ -12,6 +12,8 @@ function BleRawSerial(peripheral, opts, options) {
   this.uuid_svc = opts.uuid_svc;
   this.uuid_tx = opts.uuid_tx;
   this.uuid_rx = opts.uuid_rx;
+  this.buff_tx = new Buffer([]);
+  this.timer_tx = -1;
 }
 
 util.inherits(BleRawSerial, stream.Duplex);
@@ -23,9 +25,17 @@ BleRawSerial.prototype.connect = function (callback) {
     services.forEach(function(service) {
       service.discoverCharacteristics([self.uuid_tx, self.uuid_rx], function(err, characteristics) {
         if (err) throw err;
-        console.log("CHARS:", characteristics);
-        self.char_rx = characteristics[0]; // TODO
-        self.char_tx = characteristics[1];
+        //console.log("CHARS:", characteristics);
+        self.char_tx = characteristics[0]; // TODO
+        self.char_rx = characteristics[1];
+        
+        if (self.char_rx.properties.indexOf("notify") == -1) {
+          console.log('No NOTIFY in RX');
+        }
+        if (self.char_tx.properties.indexOf("write") == -1) {
+          console.log('No WRITE in TX');
+        }
+        
         self.char_rx.on('read', function(data, isNotification) {
           console.log('>', data.toString('ascii'));
           if (!self.push(data)) {
@@ -45,35 +55,27 @@ BleRawSerial.prototype._read = function (size) {
   //this._source.readStart();
 };
 
-/*
-BleRawSerial.prototype._write = function (data, enc, done) {
-  var i = 0;
-  for (; i+20<data.length; i+=20) {
-    var ch = data.slice(i, i+20);
-    //console.log('<', ch);
-    this.char_tx.write(ch, true);
-  }
-  var ch = data.slice(i, i+20);
-  //console.log('<', ch);
-  this.char_tx.write(ch, true, done);
-};
-*/
-
 BleRawSerial.prototype._write = function (data, enc, done) {
   var self = this;
   
-  var _wr = function(i) {
-    var ch = data.slice(i, i+20);
-    console.log('<', i, ch.toString('ascii'));
-    i += 20;
-    if (i < data.length) {
-      self.char_tx.write(ch, true, function() { _wr(i) });
-    } else {
-      self.char_tx.write(ch, true, done);
-    }
-  };
+  self.buff_tx = Buffer.concat([self.buff_tx, data]);
   
-  _wr(0);
+  if (self.timer_tx == -1) {
+    //console.log('send start');
+    self.timer_tx = setInterval(function() {
+      var chunk = self.buff_tx.slice(0, 20);
+      self.buff_tx = self.buff_tx.slice(20);
+      if (chunk.length) {
+        console.log('<', chunk.toString('ascii'));
+        self.char_tx.write(chunk, true);
+      } else {
+        clearInterval(self.timer_tx);
+        self.timer_tx = -1;
+        //console.log('send stop');
+        done();
+      }
+    }, 20);
+  }
 };
 
 ////////////////////////////////////////////////////////////
