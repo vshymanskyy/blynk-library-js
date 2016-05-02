@@ -1,3 +1,23 @@
+#!/usr/bin/env node
+'use strict';
+
+/* Some useful commands:
+ *
+ * # hciconfig hci0 reset
+ * # hcitool lescan
+ * # gatttool -b <BLE ADDRESS> -I
+ * # gatttool -b <BLE ADDRESS> -I -t random
+ *
+ *   [LE]> connect
+ *   [LE]> char-desc
+ *
+ * Read Client Characteristic Configuration:
+ *   [LE]> char-read-uuid 2902
+ *
+ * Subscribe for notifications:
+ *   [LE]> char-write-req <handle> 0100
+ */
+
 var util = require('util');
 var noble = require('noble');
 var stream = require("stream");
@@ -326,7 +346,8 @@ var dev_service_uuids = {
       uuid_svc:  'a495ff10c5b14b44b5121370f02d74de',
       uuid_rxtx: 'a495ff11c5b14b44b5121370f02d74de'
     }
-  }
+  },
+  // TODO: HC-10
 };
 
 //Buffer.prototype.toByteArray = function() { return Array.prototype.slice.call(this, 0); };
