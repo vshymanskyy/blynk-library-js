@@ -1,3 +1,9 @@
+[![NPM version](https://img.shields.io/npm/v/blynk-library.svg)](https://www.npmjs.com/package/blynk-library)
+[![NPM download](https://img.shields.io/npm/dm/blynk-library.svg)](https://www.npmjs.com/package/blynk-library)
+ ![GitHub stars](https://img.shields.io/github/stars/vshymanskyy/blynk-library-js.svg)
+[![GitHub issues](https://img.shields.io/github/issues/vshymanskyy/blynk-library-js.svg)](https://github.com/vshymanskyy/blynk-library-js/issues)
+ ![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)
+
 [![NPM](https://nodei.co/npm/blynk-library.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/blynk-library/)
 
 Implementations for other platforms:
