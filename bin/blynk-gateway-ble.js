@@ -16,6 +16,11 @@
  *
  * Subscribe for notifications:
  *   [LE]> char-write-req <handle> 0100
+ *
+ * Allow node.js BLE access:
+ *
+ * # setcap cap_net_raw+eip $(eval readlink -f `which node`)
+ *
  */
 
 var util = require('util');

@@ -1,16 +1,17 @@
 {
   "name": "blynk-library",
-  "version": "0.0.31",
+  "version": "0.0.32",
   "description": "Blynk library implementation for JavaScript (Node.js, Espruino)",
   "main": "./blynk.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "bin": {
+    "blynk.js": "bin/blynk.js",
     "blynk-ctrl.js": "bin/blynk-ctrl.js",
-    "blynk-ble-connect.js": "bin/blynk-ble-connect.js",
-    "blynk-remote.js": "bin/blynk-remote.js",
-    "blynk.js": "bin/blynk.js"
+    "blynk-gateway-ble.js": "bin/blynk-gateway-ble.js",
+    "blynk-gateway-usb.js": "bin/blynk-gateway-usb.js",
+    "blynk-remote.js": "bin/blynk-remote.js"
   },
   "engines": {
     "node": ">= 0.8.0"
@@ -32,10 +33,12 @@
   "dependencies": {
   },
   "optionalDependencies": {
+    "open": "latest",
     "noble": "latest",
+    "serialport": "latest",
     "robotjs": "latest",
     "crc": "latest",
-    "open": "latest"
+    "usb": "latest"
   },
   "author": "Volodymyr Shymanskyy",
   "license": "MIT"
