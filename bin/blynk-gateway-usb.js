@@ -39,6 +39,7 @@ function makeTcpBridge(stream) {
     stream.on('close', function(){ console.log('COM close') });
     tcp_conn.on('error', function(){ console.log('TCP error') });
     tcp_conn.on('close', function(){ console.log('TCP close') });
+    tcp_conn.setNoDelay(true);
     stream.pipe(tcp_conn).pipe(stream);
   });
 }
