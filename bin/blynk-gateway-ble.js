@@ -5,8 +5,8 @@
  *
  * # hciconfig hci0 reset
  * # hcitool lescan
- * # gatttool -b <BLE ADDRESS> -I
- * # gatttool -b <BLE ADDRESS> -I -t random
+ * # gatttool -b <MAC ADDRESS> -I
+ * # gatttool -b <MAC ADDRESS> -I -t random
  *
  *   [LE]> connect
  *   [LE]> char-desc
@@ -21,12 +21,37 @@
  *
  * # setcap cap_net_raw+eip $(eval readlink -f `which node`)
  *
+ * Regular bluetooth 2.0:
+ *
+ * # hcitool scan
+ * # rfcomm bind /dev/rfcomm0 <MAC ADDRESS>
+ * # rfcomm release /dev/rfcomm0
+ *
  */
 
 var util = require('util');
 var noble = require('noble');
 var stream = require("stream");
 var net = require("net");
+
+function dump(msg, data) {
+  process.stdout.write(msg);
+  var prevPrint = true;
+  for (var i=0; i<data.length; i++) {
+    var c = data[i];
+    if ((c > 31) && (c <  127)) {
+      if (!prevPrint) process.stdout.write(']');
+      process.stdout.write(String.fromCharCode(c));
+      prevPrint = true;
+    } else {
+      process.stdout.write(prevPrint?'[':'|');
+      if (c < 0x10) process.stdout.write('0');
+      process.stdout.write(c.toString(16));
+      prevPrint = false;
+    }
+  }
+  process.stdout.write(prevPrint ? '\n': ']\n');
+}
 
 ////////////////////////////////////////////////////////////
 
@@ -37,6 +62,8 @@ function BleRawSerial(peripheral, opts, options) {
   this.uuid_svc = opts.uuid_svc;
   this.uuid_tx = opts.uuid_tx;
   this.uuid_rx = opts.uuid_rx;
+  this.uuid_rxtx = opts.uuid_rxtx;
+  this.delay_tx = opts.delay_tx || 50;
   this.buff_tx = new Buffer([]);
   this.timer_tx = -1;
 }
@@ -47,22 +74,33 @@ BleRawSerial.prototype.connect = function (callback) {
   var self = this;
   self.peripheral.discoverServices([self.uuid_svc], function(err, services) {
     if (err) throw err;
+    //console.log("SERV:", services);
+    
     services.forEach(function(service) {
-      service.discoverCharacteristics([self.uuid_tx, self.uuid_rx], function(err, characteristics) {
+      var chars = self.uuid_rxtx ? [self.uuid_rxtx] : [self.uuid_tx, self.uuid_rx];
+      service.discoverCharacteristics(chars, function(err, characteristics) {
         if (err) throw err;
-        //console.log("CHARS:", characteristics);
-        self.char_tx = characteristics[0]; // TODO
-        self.char_rx = characteristics[1];
-        
-        if (self.char_rx.properties.indexOf("notify") == -1) {
-          console.log('No NOTIFY in RX');
-        }
-        if (self.char_tx.properties.indexOf("write") == -1) {
-          console.log('No WRITE in TX');
+        //console.log("CHAR:", characteristics);
+
+        if (self.uuid_rxtx) {
+          self.char_rx = characteristics[0];
+          self.char_tx = characteristics[0];
+        } else if (characteristics[0].properties.indexOf("notify") != -1 &&
+                   characteristics[1].properties.indexOf("write") != -1)
+        {
+          self.char_rx = characteristics[0];
+          self.char_tx = characteristics[1];
+        } else if (characteristics[1].properties.indexOf("notify") != -1 &&
+                   characteristics[0].properties.indexOf("write") != -1)
+        {
+          self.char_rx = characteristics[1];
+          self.char_tx = characteristics[0];
+        } else {
+          console.log('Error: characteristics mismatch!');
         }
         
         self.char_rx.on('read', function(data, isNotification) {
-          console.log('>', data.toString('ascii'));
+          dump('>', data);
           if (!self.push(data)) {
             //self._source.readStop();
           }
@@ -91,7 +129,7 @@ BleRawSerial.prototype._write = function (data, enc, done) {
       var chunk = self.buff_tx.slice(0, 20);
       self.buff_tx = self.buff_tx.slice(20);
       if (chunk.length) {
-        console.log('<', chunk.toString('ascii'));
+        dump('<', chunk);
         self.char_tx.write(chunk, true);
       } else {
         clearInterval(self.timer_tx);
@@ -99,7 +137,7 @@ BleRawSerial.prototype._write = function (data, enc, done) {
         //console.log('send stop');
         done();
       }
-    }, 20);
+    }, self.delay_tx);
   }
 };
 
@@ -252,7 +290,7 @@ BleBeanSerial.prototype.sendCmd = function(cmdBuffer,payloadBuffer,done) {
     gt |= gt_qty - ch - 1;
     
     gt = Buffer.concat([new Buffer([ gt ]), data]);
-    //console.log('<', gt);
+    //dump('<', gt);
     if (ch == gt_qty-1) {
         this.char_rxtx.write(gt, true, done);
     } else {
@@ -276,7 +314,7 @@ BleBeanSerial.prototype.connect = function (callback) {
           if (err) throw err;
         });
         self.char_rxtx.on('read', function(data, isNotification) {
-          //console.log('>', data);
+          //dump('>', data);
           self._onRead(data);
         });
         self.unGate();
@@ -318,16 +356,16 @@ BleBeanSerial.prototype.requestTemp = function(done) {
 
 var dev_service_uuids = {
   '713d0000503e4c75ba943148f18d941e': {
-    name : 'mbed nRF51822',
+    name : 'Nordic UART',
     create: BleRawSerial,
     options: {
       uuid_svc:'713d0000503e4c75ba943148f18d941e',
-      uuid_rx: '713d0002503e4c75ba943148f18d941e',
-      uuid_tx: '713d0003503e4c75ba943148f18d941e'
+      uuid_rx: '713d0002503e4c75ba943148f18d941e', // notify
+      uuid_tx: '713d0003503e4c75ba943148f18d941e'  // write
     }
   },
   '6e400001b5a3f393e0a9e50e24dcca9e': {
-    name : 'Nordic nRF8001 Serial',
+    name : 'Nordic UART',
     create: BleRawSerial,
     options: {
       uuid_svc:'6e400001b5a3f393e0a9e50e24dcca9e',
@@ -340,8 +378,8 @@ var dev_service_uuids = {
     create: BleRawSerial,
     options: {
       uuid_svc:'fe84',
-      uuid_rx: '2d30c082f39f4ce6923f3484ea480596', // notify
-      uuid_tx: '2d30c083f39f4ce6923f3484ea480596'  // write
+      uuid_rx: '2d30c082f39f4ce6923f3484ea480596',
+      uuid_tx: '2d30c083f39f4ce6923f3484ea480596'
     }
   },
   'a495ff10c5b14b44b5121370f02d74de': {
@@ -352,7 +390,22 @@ var dev_service_uuids = {
       uuid_rxtx: 'a495ff11c5b14b44b5121370f02d74de'
     }
   },
-  // TODO: HC-10
+  'dfb0': {
+    name : 'Bluno',
+    create: BleRawSerial,
+    options: {
+      uuid_svc:  'dfb0',
+      uuid_rxtx: 'dfb1'
+    }
+  },
+  'ffe0': {
+    name : 'HM-10',
+    create: BleRawSerial,
+    options: {
+      uuid_svc:  'ffe0',
+      uuid_rxtx: 'ffe1'
+    }
+  },
 };
 
 //Buffer.prototype.toByteArray = function() { return Array.prototype.slice.call(this, 0); };
@@ -379,7 +432,6 @@ noble.on('discover', function(peripheral) {
   console.log(util.format('Discovered %s [addr: %s (%s) uuid: %s, rssi: %d]', name, addr, addrType, uuid, rssi));
 
   peripheral.advertisement.serviceUuids.forEach(function(service) {
-    console.log(service);
     var svc = dev_service_uuids[service];
     if (svc !== undefined) {
       noble.stopScanning();
@@ -388,7 +440,6 @@ noble.on('discover', function(peripheral) {
       peripheral.connect(function(err) {
         if (err) throw err;
         peripherals[uuid] = peripheral;
-        
 
         /*peripheral.on('rssiUpdate', function(rssi) {
           console.log(name, 'rssi:', rssi);
@@ -405,26 +456,27 @@ noble.on('discover', function(peripheral) {
         var tcp_conn = net.connect(8442, "blynk-cloud.com", function(err) {
           if (err) throw err;
           console.log('TCP connected');
+          tcp_conn.setNoDelay(true);
         });
-        
-        peripheral.on('disconnect', function() {
-          console.log('BLE disconnect', uuid);
+
+        function killBridge() {
           delete peripherals[uuid];
           ble_ser = null;
           tcp_conn.end();
           setTimeout(function() {
             noble.startScanning();
           }, 100);
-        });
-        
-        ble_ser.on('error', function(){ console.log('BLE error'); });
-        tcp_conn.on('error', function(){ console.log('TCP error');});
-        ble_ser.on('close', function(){ console.log('BLE close'); });
-        tcp_conn.on('close', function(){ console.log('TCP close');});
+        }
+        peripheral.on('disconnect', function() { console.log('BLE disconnect', uuid); killBridge();});
+        ble_ser.on('error', function(){ console.log('BLE error'); killBridge();});
+        tcp_conn.on('error', function(){ console.log('TCP error'); killBridge();});
+        ble_ser.on('close', function(){ console.log('BLE close'); killBridge();});
+        tcp_conn.on('close', function(){ console.log('TCP close'); killBridge();});
         
         ble_ser.pipe(tcp_conn).pipe(ble_ser);
         
         //ble_ser.pipe(process.stdout);
+        //process.stdin.pipe(ble_ser);
       });
     }
   });
@@ -432,10 +484,13 @@ noble.on('discover', function(peripheral) {
 
 // catches ctrl+c event
 process.on('SIGINT', function() {
+  noble.stopScanning();
+
   Object.keys(peripherals).forEach(function(uuid) {
     console.log('Disconnecting from ' + uuid + '...');
     peripherals[uuid].disconnect( function(){
       console.log('disconnected');
+      delete peripherals[uuid];
     });
   });
 
@@ -444,5 +499,3 @@ process.on('SIGINT', function() {
     process.exit();
   }, 2000);
 });
-
-process.stdin.resume();//so the program will not close instantly
