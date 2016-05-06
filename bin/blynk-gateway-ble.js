@@ -54,6 +54,7 @@ function dump(msg, data) {
 }
 
 ////////////////////////////////////////////////////////////
+// TODO: Common base for BleRawSerial and BleBeanSerial
 
 function BleRawSerial(peripheral, opts, options) {
   stream.Duplex.call(this, options);
@@ -120,9 +121,9 @@ BleRawSerial.prototype._read = function (size) {
 
 BleRawSerial.prototype._write = function (data, enc, done) {
   var self = this;
-  
+
   self.buff_tx = Buffer.concat([self.buff_tx, data]);
-  
+
   if (self.timer_tx == -1) {
     //console.log('send start');
     self.timer_tx = setInterval(function() {
@@ -337,7 +338,7 @@ BleBeanSerial.prototype._write = function (data, enc, done) {
 };
 
 BleBeanSerial.prototype.unGate = function(done) {
-  this.sendCmd(commands.MSG_ID_GATING, new Buffer({}), done);
+  this.sendCmd(commands.MSG_ID_GATING, new Buffer([]), done);
 }
 
 BleBeanSerial.prototype.setColor = function(color,done) {
