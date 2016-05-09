@@ -11,7 +11,7 @@ function portAttached(port) {
   // Get configuration: opendelay, baudrate
   console.log("Port attached:", JSON.stringify(port));
   port.baudrate = 115200;
-  port.opendelay = 500;
+  port.opendelay = 2000;
   setTimeout(function() { openPort(port) }, port.opendelay);
 }
 
@@ -24,6 +24,7 @@ function openPort(port) {
     baudrate: port.baudrate
   }, false);
 
+  // TODO: Retry open
   serialPort.open(function (err) {
     if (err) throw err;
     console.log('Port opened:', port.comName);
@@ -64,6 +65,7 @@ function rescanPorts() {
   });
 }
 
+// USB ports
 usb.on('attach', function(device) {
   setTimeout(rescanPorts, 100);
 });
@@ -71,6 +73,9 @@ usb.on('attach', function(device) {
 usb.on('detach', function(device) {
   setTimeout(rescanPorts, 10);
 });
+
+// Non-USB ports
+setInterval(rescanPorts, 10000);
 
 // Catch ctrl+c event
 process.on('SIGINT', function() {
@@ -81,3 +86,7 @@ process.on('SIGINT', function() {
 serial.list(function (err, ports) {
   knownPorts = ports.map(function (port) { return port.comName });
 });
+
+if (process.argv[2]) {
+  portAttached({ comName: process.argv[2] });
+}
