@@ -81,7 +81,7 @@ BleRawSerial.prototype.connect = function (callback) {
   self.peripheral.discoverServices([self.uuid_svc], function(err, services) {
     if (err) throw err;
     //console.log("SERV:", services);
-    
+
     services.forEach(function(service) {
       var chars = self.uuid_rxtx ? [self.uuid_rxtx] : [self.uuid_tx, self.uuid_rx];
       service.discoverCharacteristics(chars, function(err, characteristics) {
@@ -92,19 +92,23 @@ BleRawSerial.prototype.connect = function (callback) {
           self.char_rx = characteristics[0];
           self.char_tx = characteristics[0];
         } else if (characteristics[0].properties.indexOf("notify") != -1 &&
-                   characteristics[1].properties.indexOf("write") != -1)
+                   (characteristics[1].properties.indexOf("write") != -1 ||
+                    characteristics[1].properties.indexOf("writeWithoutResponse") != -1)
+                  )
         {
           self.char_rx = characteristics[0];
           self.char_tx = characteristics[1];
         } else if (characteristics[1].properties.indexOf("notify") != -1 &&
-                   characteristics[0].properties.indexOf("write") != -1)
+                   (characteristics[0].properties.indexOf("write") != -1 ||
+                    characteristics[0].properties.indexOf("writeWithoutResponse") != -1)
+                  )
         {
           self.char_rx = characteristics[1];
           self.char_tx = characteristics[0];
         } else {
           console.log('Error: characteristics mismatch!');
         }
-        
+
         self.char_rx.on('read', function(data, isNotification) {
           dump('>', data);
           if (!self.push(data)) {
