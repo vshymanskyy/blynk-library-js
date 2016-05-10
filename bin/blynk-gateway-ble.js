@@ -31,10 +31,14 @@
 
 var util = require('util');
 var noble = require('noble');
-var stream = require("stream");
-var net = require("net");
+var stream = require('stream');
+var net = require('net');
+
+var DEBUG = false;
 
 function dump(msg, data) {
+  if (DEBUG)
+    return;
   process.stdout.write(msg);
   var prevPrint = true;
   for (var i=0; i<data.length; i++) {
@@ -64,8 +68,9 @@ function BleRawSerial(peripheral, opts, options) {
   this.uuid_tx = opts.uuid_tx;
   this.uuid_rx = opts.uuid_rx;
   this.uuid_rxtx = opts.uuid_rxtx;
-  this.delay_tx = opts.delay_tx || 50;
-  this.buff_tx = new Buffer([]);
+  this.delay_tx = opts.delay_tx || 30;
+  this.max_chunk = opts.max_chunk || 20;
+  this.buff_tx = [];
   this.timer_tx = -1;
 }
 
@@ -122,21 +127,23 @@ BleRawSerial.prototype._read = function (size) {
 BleRawSerial.prototype._write = function (data, enc, done) {
   var self = this;
 
-  self.buff_tx = Buffer.concat([self.buff_tx, data]);
+  // Cut data slices
+  for (var i = 0; i<data.length; i+=self.max_chunk) {
+    self.buff_tx.push(data.slice(i, i+self.max_chunk));
+  }
 
   if (self.timer_tx == -1) {
     //console.log('send start');
     self.timer_tx = setInterval(function() {
-      var chunk = self.buff_tx.slice(0, 20);
-      self.buff_tx = self.buff_tx.slice(20);
-      if (chunk.length) {
-        dump('<', chunk);
-        self.char_tx.write(chunk, true);
-      } else {
+      var chunk = self.buff_tx[0];
+      self.buff_tx = self.buff_tx.slice(1);
+      dump('<', chunk);
+      self.char_tx.write(chunk, true);
+      if (!self.buff_tx.length) {
         clearInterval(self.timer_tx);
         self.timer_tx = -1;
         //console.log('send stop');
-        done();
+        if (typeof(done) == 'function') done();
       }
     }, self.delay_tx);
   }
@@ -181,7 +188,11 @@ function BleBeanSerial(peripheral, opts, options) {
   this.peripheral = peripheral;
   this.uuid_svc = opts.uuid_svc;
   this.uuid_rxtx = opts.uuid_rxtx;
-  
+  this.delay_tx = opts.delay_tx || 30;
+  this.max_chunk = opts.max_chunk || 20;
+  this.buff_tx = [];
+  this.timer_tx = -1;
+
   this.count = 0;
   this.gst = new Buffer(0);
 }
@@ -262,6 +273,7 @@ BleBeanSerial.prototype._onRead = function(gt){
 };
 
 BleBeanSerial.prototype.sendCmd = function(cmdBuffer,payloadBuffer,done) {
+  var self = this;
   var sizeBuffer = new Buffer(2);
   sizeBuffer.writeUInt8(cmdBuffer.length + payloadBuffer.length,0);
   sizeBuffer.writeUInt8(0,1);
@@ -284,22 +296,33 @@ BleBeanSerial.prototype.sendCmd = function(cmdBuffer,payloadBuffer,done) {
   for (var ch=0; ch<gt_qty; ch++) {
     var data = gst.slice(ch*optimal_packet_size, (ch+1)*optimal_packet_size);
     
-    var gt = (this.count * 0x20); // << 5
+    var gt = (self.count * 0x20); // << 5
     if (ch == 0) {
       gt |= 0x80;
     }
     gt |= gt_qty - ch - 1;
     
     gt = Buffer.concat([new Buffer([ gt ]), data]);
-    //dump('<', gt);
-    if (ch == gt_qty-1) {
-        this.char_rxtx.write(gt, true, done);
-    } else {
-        this.char_rxtx.write(gt, true);
-    }
+    self.buff_tx.push(gt);
   }
 
-  this.count = (this.count + 1) % 4;
+  if (self.timer_tx == -1) {
+    //console.log('send start');
+    self.timer_tx = setInterval(function() {
+      var chunk = self.buff_tx[0];
+      self.buff_tx = self.buff_tx.slice(1);
+      dump('<', chunk);
+      self.char_rxtx.write(chunk, true);
+      if (!self.buff_tx.length) {
+        clearInterval(self.timer_tx);
+        self.timer_tx = -1;
+        //console.log('send stop');
+        if (typeof(done) == 'function') done();
+      }
+    }, self.delay_tx);
+  }
+
+  self.count = (self.count + 1) % 4;
 };
 
 BleBeanSerial.prototype.connect = function (callback) {
@@ -315,7 +338,7 @@ BleBeanSerial.prototype.connect = function (callback) {
           if (err) throw err;
         });
         self.char_rxtx.on('read', function(data, isNotification) {
-          //dump('>', data);
+          dump('>', data);
           self._onRead(data);
         });
         self.unGate();
@@ -421,7 +444,7 @@ noble.on('stateChange', function(state) {
   }
 });
 
-var peripherals = {};
+var connections = {};
 
 // TODO: Multiple device connect?
 noble.on('discover', function(peripheral) {
@@ -440,7 +463,6 @@ noble.on('discover', function(peripheral) {
 
       peripheral.connect(function(err) {
         if (err) throw err;
-        peripherals[uuid] = peripheral;
 
         /*peripheral.on('rssiUpdate', function(rssi) {
           console.log(name, 'rssi:', rssi);
@@ -449,8 +471,8 @@ noble.on('discover', function(peripheral) {
           peripheral.updateRssi();
         }, 2000);*/
 
-        var ble_ser = new svc.create(peripheral, svc.options);
-        ble_ser.connect(function(err) {
+        var ble_conn = new svc.create(peripheral, svc.options);
+        ble_conn.connect(function(err) {
           if (err) throw err;
           console.log('BLE connected');
         });
@@ -461,23 +483,32 @@ noble.on('discover', function(peripheral) {
         });
 
         function killBridge() {
-          delete peripherals[uuid];
-          ble_ser = null;
-          tcp_conn.end();
+          if (!connections[uuid]) return;
+          console.log('Closing bridge');
+          connections[uuid].tcp.end();
+          connections[uuid].ble.disconnect();
+          delete connections[uuid];
           setTimeout(function() {
             noble.startScanning();
-          }, 100);
+          }, 300);
         }
-        peripheral.on('disconnect', function() { console.log('BLE disconnect', uuid); killBridge();});
-        ble_ser.on('error', function(){ console.log('BLE error'); killBridge();});
-        tcp_conn.on('error', function(){ console.log('TCP error'); killBridge();});
-        ble_ser.on('close', function(){ console.log('BLE close'); killBridge();});
-        tcp_conn.on('close', function(){ console.log('TCP close'); killBridge();});
-        
-        ble_ser.pipe(tcp_conn).pipe(ble_ser);
-        
-        //ble_ser.pipe(process.stdout);
-        //process.stdin.pipe(ble_ser);
+
+        peripheral.on('disconnect', function() { console.log('BLE disconnect', uuid); killBridge(); });
+        ble_conn.on('error', killBridge);
+        ble_conn.on('close', killBridge);
+
+        tcp_conn.on('error', killBridge);
+        tcp_conn.on('close', killBridge);
+
+        ble_conn.pipe(tcp_conn).pipe(ble_conn);
+        //ble_conn.pipe(process.stdout);
+        //process.stdin.pipe(ble_conn);
+
+        connections[uuid] = {
+          ble: peripheral,
+          serial: ble_conn,
+          tcp: tcp_conn
+        };
       });
     }
   });
@@ -487,11 +518,10 @@ noble.on('discover', function(peripheral) {
 process.on('SIGINT', function() {
   noble.stopScanning();
 
-  Object.keys(peripherals).forEach(function(uuid) {
+  Object.keys(connections).forEach(function(uuid) {
     console.log('Disconnecting from ' + uuid + '...');
-    peripherals[uuid].disconnect( function(){
-      console.log('disconnected');
-      delete peripherals[uuid];
+    connections[uuid].ble.disconnect( function(){
+      delete connections[uuid];
     });
   });
 
