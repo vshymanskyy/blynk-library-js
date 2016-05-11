@@ -1090,7 +1090,7 @@ function hasOwnProperty(obj, prop) {
 },{"./support/isBuffer":7,"_process":6,"inherits":5}],9:[function(require,module,exports){
 module.exports={
   "name": "blynk-library",
-  "version": "0.0.35",
+  "version": "0.0.36",
   "description": "Blynk library implementation for JavaScript (Node.js, Espruino)",
   "author": "Volodymyr Shymanskyy",
   "license": "MIT",
@@ -1100,8 +1100,7 @@ module.exports={
     "blynk.js": "bin/blynk.js",
     "blynk-ctrl.js": "bin/blynk-ctrl.js",
     "blynk-gateway-ble.js": "bin/blynk-gateway-ble.js",
-    "blynk-gateway-usb.js": "bin/blynk-gateway-usb.js",
-    "blynk-remote.js": "bin/blynk-remote.js"
+    "blynk-gateway-usb.js": "bin/blynk-gateway-usb.js"
   },
   "engines": {
     "node": ">= 0.8.0"
@@ -1116,8 +1115,6 @@ module.exports={
   "dependencies": {
   },
   "optionalDependencies": {
-    "open": "*",
-    "robotjs": "*",
     "crc": "*",
     "usb": "*",
     "serialport": "*",
