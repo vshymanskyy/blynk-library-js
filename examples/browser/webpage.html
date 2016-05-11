@@ -42,8 +42,7 @@
 
 
   <script src="jquery.min.js"></script>
-  <script src="../../blynk-browser.js"></script>
-  <script src="../../blynk.js"></script>
+  <script src="../../dist/blynk.min.js"></script>
   
   <script type="text/javascript">
   
@@ -58,9 +57,7 @@
       $("#howto").hide();
     
       var auth = $("#auth").val();
-      var blynk = new Blynk(auth, options = {
-        addr : "blynk-qa.cloudapp.net"
-      });
+      var blynk = new Blynk.Blynk(auth);
 
       var v0 = new blynk.VirtualPin(0);
       var v1 = new blynk.VirtualPin(1);

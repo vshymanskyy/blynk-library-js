@@ -1,11 +1,11 @@
 {
   "name": "blynk-library",
-  "version": "0.0.34",
+  "version": "0.0.35",
   "description": "Blynk library implementation for JavaScript (Node.js, Espruino)",
+  "author": "Volodymyr Shymanskyy",
+  "license": "MIT",
+
   "main": "./blynk.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "bin": {
     "blynk.js": "bin/blynk.js",
     "blynk-ctrl.js": "bin/blynk-ctrl.js",
@@ -15,6 +15,27 @@
   },
   "engines": {
     "node": ">= 0.8.0"
+  },
+  "scripts": {
+    "prepublish": "make clean all",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "browser": {
+    "./blynk-node.js": false
+  },
+  "dependencies": {
+  },
+  "optionalDependencies": {
+    "open": "*",
+    "robotjs": "*",
+    "crc": "*",
+    "usb": "*",
+    "serialport": "*",
+    "noble": "*"
+  },
+  "devDependencies": {
+    "browserify": "*",
+    "uglify-js": "*"
   },
   "keywords": [
     "Arduino",
@@ -29,17 +50,5 @@
   },
   "bugs": {
     "url": "https://github.com/vshymanskyy/blynk-library-js/issues"
-  },
-  "dependencies": {
-  },
-  "optionalDependencies": {
-    "open": "latest",
-    "noble": "latest",
-    "serialport": "latest",
-    "robotjs": "latest",
-    "crc": "latest",
-    "usb": "latest"
-  },
-  "author": "Volodymyr Shymanskyy",
-  "license": "MIT"
+  }
 }

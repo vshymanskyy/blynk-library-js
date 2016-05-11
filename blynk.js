@@ -81,6 +81,9 @@ if (isNode()) {
   var bl_node = require('./blynk-node.js');
   var events = require('events');
   var util = require('util');
+} else if (isBrowser()) {
+  var events = require('events');
+  var util = require('util');
 }
 
 /*
@@ -289,7 +292,8 @@ var Blynk = function(auth, options) {
   } else if (isEspruino()) {
     this.conn = new EspruinoTCP(options);
   } else if (isBrowser()) {
-    this.conn = new BlynkWsClient(options);
+    var bl_browser = require('./blynk-browser.js');
+    this.conn = new bl_browser.WsClient(options);
   } else {
     this.conn = new bl_node.SslClient(options);
   }
@@ -369,10 +373,6 @@ var Blynk = function(auth, options) {
     util.inherits(this.VirtualPin, events.EventEmitter);
     util.inherits(this.WidgetBridge, events.EventEmitter);
     util.inherits(this.WidgetTerminal, events.EventEmitter);
-  } else if (isBrowser()) {
-    MicroEvent.mixin(this.VirtualPin);
-    MicroEvent.mixin(this.WidgetBridge);
-    MicroEvent.mixin(this.WidgetTerminal);
   }
 
   if (!options.skip_connect) {
@@ -382,8 +382,6 @@ var Blynk = function(auth, options) {
 
 if (needsEmitter()) {
   util.inherits(Blynk, events.EventEmitter);
-} else if (isBrowser()) {
-  MicroEvent.mixin(Blynk);
 }
 
 Blynk.prototype.onReceive = function(data) {
