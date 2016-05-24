@@ -68,7 +68,7 @@ function BleRawSerial(peripheral, opts, options) {
   this.uuid_tx = opts.uuid_tx;
   this.uuid_rx = opts.uuid_rx;
   this.uuid_rxtx = opts.uuid_rxtx;
-  this.delay_tx = opts.delay_tx || 30;
+  this.delay_send = opts.delay_send || 30;
   this.max_chunk = opts.max_chunk || 20;
   this.buff_tx = [];
   this.timer_tx = -1;
@@ -83,39 +83,39 @@ BleRawSerial.prototype.connect = function (callback) {
     //console.log("SERV:", services);
 
     services.forEach(function(service) {
-      var chars = self.uuid_rxtx ? [self.uuid_rxtx] : [self.uuid_tx, self.uuid_rx];
+      var chars = self.uuid_rxtx ? [self.uuid_rxtx] : [self.uuid_rx, self.uuid_tx];
       service.discoverCharacteristics(chars, function(err, characteristics) {
         if (err) throw err;
         //console.log("CHAR:", characteristics);
 
         if (self.uuid_rxtx) {
-          self.char_rx = characteristics[0];
           self.char_tx = characteristics[0];
+          self.char_rx = characteristics[0];
         } else if (characteristics[0].properties.indexOf("notify") != -1 &&
                    (characteristics[1].properties.indexOf("write") != -1 ||
                     characteristics[1].properties.indexOf("writeWithoutResponse") != -1)
                   )
         {
-          self.char_rx = characteristics[0];
-          self.char_tx = characteristics[1];
+          self.char_tx = characteristics[0];
+          self.char_rx = characteristics[1];
         } else if (characteristics[1].properties.indexOf("notify") != -1 &&
                    (characteristics[0].properties.indexOf("write") != -1 ||
                     characteristics[0].properties.indexOf("writeWithoutResponse") != -1)
                   )
         {
-          self.char_rx = characteristics[1];
-          self.char_tx = characteristics[0];
+          self.char_tx = characteristics[1];
+          self.char_rx = characteristics[0];
         } else {
           console.log('Error: characteristics mismatch!');
         }
 
-        self.char_rx.on('read', function(data, isNotification) {
+        self.char_tx.on('read', function(data, isNotification) {
           dump('>', data);
           if (!self.push(data)) {
             //self._source.readStop();
           }
         });
-        self.char_rx.notify(true, function(err) {
+        self.char_tx.notify(true, function(err) {
           if (err) throw err;
           callback();
         });
@@ -142,14 +142,14 @@ BleRawSerial.prototype._write = function (data, enc, done) {
       var chunk = self.buff_tx[0];
       self.buff_tx = self.buff_tx.slice(1);
       dump('<', chunk);
-      self.char_tx.write(chunk, true);
+      self.char_rx.write(chunk, true);
       if (!self.buff_tx.length) {
         clearInterval(self.timer_tx);
         self.timer_tx = -1;
         //console.log('send stop');
         if (typeof(done) == 'function') done();
       }
-    }, self.delay_tx);
+    }, self.delay_send);
   }
 };
 
@@ -192,7 +192,7 @@ function BleBeanSerial(peripheral, opts, options) {
   this.peripheral = peripheral;
   this.uuid_svc = opts.uuid_svc;
   this.uuid_rxtx = opts.uuid_rxtx;
-  this.delay_tx = opts.delay_tx || 30;
+  this.delay_send = opts.delay_send || 30;
   this.max_chunk = opts.max_chunk || 20;
   this.buff_tx = [];
   this.timer_tx = -1;
@@ -323,7 +323,7 @@ BleBeanSerial.prototype.sendCmd = function(cmdBuffer,payloadBuffer,done) {
         //console.log('send stop');
         if (typeof(done) == 'function') done();
       }
-    }, self.delay_tx);
+    }, self.delay_send);
   }
 
   self.count = (self.count + 1) % 4;
@@ -388,8 +388,8 @@ var dev_service_uuids = {
     create: BleRawSerial,
     options: {
       uuid_svc:'713d0000503e4c75ba943148f18d941e',
-      uuid_rx: '713d0002503e4c75ba943148f18d941e', // notify
-      uuid_tx: '713d0003503e4c75ba943148f18d941e'  // write
+      uuid_tx: '713d0002503e4c75ba943148f18d941e', // notify
+      uuid_rx: '713d0003503e4c75ba943148f18d941e'  // write
     }
   },
   '6e400001b5a3f393e0a9e50e24dcca9e': {
@@ -397,8 +397,8 @@ var dev_service_uuids = {
     create: BleRawSerial,
     options: {
       uuid_svc:'6e400001b5a3f393e0a9e50e24dcca9e',
-      uuid_rx: '6e400002b5a3f393e0a9e50e24dcca9e',
-      uuid_tx: '6e400003b5a3f393e0a9e50e24dcca9e'
+      uuid_tx: '6e400002b5a3f393e0a9e50e24dcca9e', // notify
+      uuid_rx: '6e400003b5a3f393e0a9e50e24dcca9e'  // write
     }
   },
   'fe84': {
@@ -406,8 +406,8 @@ var dev_service_uuids = {
     create: BleRawSerial,
     options: {
       uuid_svc:'fe84',
-      uuid_rx: '2d30c082f39f4ce6923f3484ea480596',
-      uuid_tx: '2d30c083f39f4ce6923f3484ea480596'
+      uuid_tx: '2d30c082f39f4ce6923f3484ea480596', // notify
+      uuid_rx: '2d30c083f39f4ce6923f3484ea480596'  // write
     }
   },
   'a495ff10c5b14b44b5121370f02d74de': {
