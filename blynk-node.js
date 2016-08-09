@@ -139,7 +139,8 @@ exports.SslClient = function(options) {
   self.pass = options.pass || null;
   // This is necessary only if the server uses the self-signed certificate
   self.ca   = options.ca   || [ path.join(certs_path, 'server.crt') ];
-  
+  self.servername = options.servername || self.addr;
+
   var net = require('net');
   var tls = require('tls');
   var fs = require('fs');
@@ -158,7 +159,7 @@ exports.SslClient = function(options) {
     var opts = {
       host: self.addr,
       port: self.port,
-      servername: self.addr,
+      servername: self.servername,
       rejectUnauthorized: false,
       family: 4
     };
