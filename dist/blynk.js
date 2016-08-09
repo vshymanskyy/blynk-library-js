@@ -1090,7 +1090,7 @@ function hasOwnProperty(obj, prop) {
 },{"./support/isBuffer":7,"_process":6,"inherits":5}],9:[function(require,module,exports){
 module.exports={
   "name": "blynk-library",
-  "version": "0.0.36",
+  "version": "0.0.37",
   "description": "Blynk library implementation for JavaScript (Node.js, Espruino)",
   "author": "Volodymyr Shymanskyy",
   "license": "MIT",
