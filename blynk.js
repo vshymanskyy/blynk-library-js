@@ -396,7 +396,7 @@ Blynk.prototype.onReceive = function(data) {
     var consumed = 5;
 
     if (msg_type === MsgType.RSP) {
-      //console.log('> ', msg_type, msg_id, string_of_enum(MsgStatus, msg_len), ' ! ');
+      //console.log('> ', msg_type, msg_id, string_of_enum(MsgStatus, msg_len));
       if (!self.profile) {
         if (self.timerConn && msg_id === 1) {
           if (msg_len === MsgStatus.OK) {
@@ -490,7 +490,7 @@ Blynk.prototype.sendRsp = function(msg_type, msg_id, msg_len, data) {
   data = data || "";
   msg_id = msg_id || (self.msg_id++);
   if (msg_type == MsgType.RSP) {
-    //console.log('< ', msg_type, msg_id, string_of_enum(MsgStatus, msg_len), ' ! ');
+    //console.log('< ', msg_type, msg_id, string_of_enum(MsgStatus, msg_len));
     self.conn.write(blynkHeader(msg_type, msg_id, msg_len));
   } else {
     //console.log('< ', msg_type, msg_id, msg_len, ' : ', data.split('\0'));
