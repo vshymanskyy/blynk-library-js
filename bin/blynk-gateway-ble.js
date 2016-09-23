@@ -110,7 +110,7 @@ BleRawSerial.prototype.connect = function (callback) {
         }
 
         self.char_tx.on('read', function(data, isNotification) {
-          dump('>', data);
+          //dump('>', data);
           if (!self.push(data)) {
             //self._source.readStop();
           }
@@ -141,7 +141,7 @@ BleRawSerial.prototype._write = function (data, enc, done) {
     self.timer_tx = setInterval(function() {
       var chunk = self.buff_tx[0];
       self.buff_tx = self.buff_tx.slice(1);
-      dump('<', chunk);
+      //dump('<', chunk);
       self.char_rx.write(chunk, true);
       if (!self.buff_tx.length) {
         clearInterval(self.timer_tx);
@@ -315,7 +315,7 @@ BleBeanSerial.prototype.sendCmd = function(cmdBuffer,payloadBuffer,done) {
     self.timer_tx = setInterval(function() {
       var chunk = self.buff_tx[0];
       self.buff_tx = self.buff_tx.slice(1);
-      dump('<', chunk);
+      //dump('<', chunk);
       self.char_rxtx.write(chunk, true);
       if (!self.buff_tx.length) {
         clearInterval(self.timer_tx);
@@ -342,7 +342,7 @@ BleBeanSerial.prototype.connect = function (callback) {
           if (err) throw err;
         });
         self.char_rxtx.on('read', function(data, isNotification) {
-          dump('>', data);
+          //dump('>', data);
           self._onRead(data);
         });
         self.unGate();
@@ -401,6 +401,14 @@ var dev_service_uuids = {
       uuid_rx: '6e400003b5a3f393e0a9e50e24dcca9e'  // write
     }
   },
+  'fff0': {
+    name : 'Microduino UART',
+    create: BleRawSerial,
+    options: {
+      uuid_svc:  'fff0',
+      uuid_rxtx: 'fff6',
+    }
+  },
   'fe84': {
     name : 'Simblee',
     create: BleRawSerial,
@@ -408,6 +416,15 @@ var dev_service_uuids = {
       uuid_svc:'fe84',
       uuid_tx: '2d30c082f39f4ce6923f3484ea480596', // notify
       uuid_rx: '2d30c083f39f4ce6923f3484ea480596'  // write
+    }
+  },
+  "2220": {
+    name : 'RFDuino BLE',
+    create: BleRawSerial,
+    options: {
+      uuid_svc: '2220',
+      uuid_tx:  '2221',
+      uuid_rx:  '2222'
     }
   },
   'a495ff10c5b14b44b5121370f02d74de': {
@@ -423,7 +440,9 @@ var dev_service_uuids = {
     create: BleRawSerial,
     options: {
       uuid_svc:  'dfb0',
-      uuid_rxtx: 'dfb1'
+      uuid_rxtx: 'dfb1',
+      uuid_cmd:  'dfb2',
+      max_chunk: 17
     }
   },
   'ffe0': {
@@ -466,7 +485,13 @@ noble.on('discover', function(peripheral) {
       console.log("Device type:", svc.name);
 
       peripheral.connect(function(err) {
-        if (err) throw err;
+        if (err) {
+          console.error(err);
+          setTimeout(function() {
+            noble.startScanning();
+          }, 300);
+          return;
+        }
 
         /*peripheral.on('rssiUpdate', function(rssi) {
           console.log(name, 'rssi:', rssi);
@@ -480,7 +505,8 @@ noble.on('discover', function(peripheral) {
           if (err) throw err;
           console.log('BLE connected');
         });
-        var tcp_conn = net.connect(8442, "blynk-cloud.com", function(err) {
+        var tcp_conn;
+        tcp_conn = net.connect(8442, "blynk-cloud.com", function(err) {
           if (err) throw err;
           console.log('TCP connected');
           tcp_conn.setNoDelay(true);
@@ -489,7 +515,9 @@ noble.on('discover', function(peripheral) {
         function killBridge() {
           if (!connections[uuid]) return;
           console.log('Closing bridge');
-          connections[uuid].tcp.end();
+          if (connections[uuid].tcp !== undefined) {
+            connections[uuid].tcp.end();
+          }
           connections[uuid].ble.disconnect();
           delete connections[uuid];
           setTimeout(function() {
@@ -501,12 +529,15 @@ noble.on('discover', function(peripheral) {
         ble_conn.on('error', killBridge);
         ble_conn.on('close', killBridge);
 
-        tcp_conn.on('error', killBridge);
-        tcp_conn.on('close', killBridge);
+        if (tcp_conn !== undefined) {
+          tcp_conn.on('error', killBridge);
+          tcp_conn.on('close', killBridge);
 
-        ble_conn.pipe(tcp_conn).pipe(ble_conn);
-        //ble_conn.pipe(process.stdout);
-        //process.stdin.pipe(ble_conn);
+          ble_conn.pipe(tcp_conn).pipe(ble_conn);
+        } else {
+          ble_conn.pipe(process.stdout);
+          process.stdin.pipe(ble_conn);
+        }
 
         connections[uuid] = {
           ble: peripheral,
