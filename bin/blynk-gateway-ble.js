@@ -68,6 +68,7 @@ function BleRawSerial(peripheral, opts, options) {
   this.uuid_tx = opts.uuid_tx;
   this.uuid_rx = opts.uuid_rx;
   this.uuid_rxtx = opts.uuid_rxtx;
+  this.uuid_cmd = opts.uuid_cmd;
   this.delay_send = opts.delay_send || 30;
   this.max_chunk = opts.max_chunk || 20;
   this.buff_tx = [];
@@ -83,30 +84,48 @@ BleRawSerial.prototype.connect = function (callback) {
     //console.log("SERV:", services);
 
     services.forEach(function(service) {
-      var chars = self.uuid_rxtx ? [self.uuid_rxtx] : [self.uuid_rx, self.uuid_tx];
+      var chars = [self.uuid_rx, self.uuid_tx, self.uuid_rxtx, self.uuid_cmd].filter((n) => n != undefined);
       service.discoverCharacteristics(chars, function(err, characteristics) {
         if (err) throw err;
         //console.log("CHAR:", characteristics);
 
-        if (self.uuid_rxtx) {
-          self.char_tx = characteristics[0];
-          self.char_rx = characteristics[0];
-        } else if (characteristics[0].properties.indexOf("notify") != -1 &&
-                   (characteristics[1].properties.indexOf("write") != -1 ||
-                    characteristics[1].properties.indexOf("writeWithoutResponse") != -1)
-                  )
-        {
-          self.char_tx = characteristics[0];
-          self.char_rx = characteristics[1];
-        } else if (characteristics[1].properties.indexOf("notify") != -1 &&
-                   (characteristics[0].properties.indexOf("write") != -1 ||
-                    characteristics[0].properties.indexOf("writeWithoutResponse") != -1)
-                  )
-        {
-          self.char_tx = characteristics[1];
-          self.char_rx = characteristics[0];
-        } else {
-          console.log('Error: characteristics mismatch!');
+        characteristics.forEach(function(char) {
+          if (self.uuid_rxtx == char.uuid) {
+            self.char_rx = char;
+            self.char_tx = char;
+          } else if (self.uuid_rx == char.uuid) {
+            self.char_rx = char;
+          } else if (self.uuid_tx == char.uuid) {
+            self.char_tx = char;
+          } else if (self.uuid_cmd == char.uuid) {
+            self.char_cmd = char;
+          }
+        });
+
+        if (self.char_tx.properties.indexOf("notify") < 0) {
+          console.log('Error: TX char invalid!', self.char_tx.properties);
+        }
+
+        if (self.char_rx.properties.indexOf("write") < 0 &&
+            self.char_rx.properties.indexOf("writeWithoutResponse") < 0
+        ) {
+          console.log('Error: RX char invalid!', self.char_rx.properties);
+        }
+
+        if (self.char_cmd) {
+          console.log('Configuring DFRobot...');
+          /*self.char_cmd.on('read', function(data, isNotification) {
+            dump('CMD>', data);
+          });
+          self.char_cmd.notify(true, function(err) {
+            if (err) throw err;
+          });*/
+
+          self.char_cmd.write(new Buffer("AT\r\n"), true);
+          self.char_cmd.write(new Buffer("AT+PASSWORD="), true);
+          self.char_cmd.write(new Buffer("DFRobot\r\n"), true);
+          self.char_cmd.write(new Buffer("AT+CURRUART="), true);
+          self.char_cmd.write(new Buffer("115200\r\n"), true);
         }
 
         self.char_tx.on('read', function(data, isNotification) {
@@ -402,11 +421,12 @@ var dev_service_uuids = {
     }
   },
   'fff0': {
-    name : 'Microduino UART',
+    name : 'Microduino',
     create: BleRawSerial,
     options: {
       uuid_svc:  'fff0',
       uuid_rxtx: 'fff6',
+      max_chunk: 16
     }
   },
   'fe84': {
@@ -436,13 +456,13 @@ var dev_service_uuids = {
     }
   },
   'dfb0': {
-    name : 'Bluno',
+    name : 'DFRobot',
     create: BleRawSerial,
     options: {
       uuid_svc:  'dfb0',
       uuid_rxtx: 'dfb1',
       uuid_cmd:  'dfb2',
-      max_chunk: 17
+      max_chunk: 16
     }
   },
   'ffe0': {
@@ -501,7 +521,7 @@ noble.on('discover', function(peripheral) {
         }, 2000);*/
 
         var ble_conn = new svc.create(peripheral, svc.options);
-        ble_conn.connect(function(err) {
+        ble_conn.connect(function(err) { // TODO: May not fire at all
           if (err) throw err;
           console.log('BLE connected');
         });
