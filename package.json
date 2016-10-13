@@ -1,16 +1,15 @@
 {
   "name": "blynk-library",
-  "version": "0.0.37",
+  "version": "0.0.38",
   "description": "Blynk library implementation for JavaScript (Node.js, Espruino)",
   "author": "Volodymyr Shymanskyy",
   "license": "MIT",
 
   "main": "./blynk.js",
   "bin": {
-    "blynk.js": "bin/blynk.js",
-    "blynk-ctrl.js": "bin/blynk-ctrl.js",
-    "blynk-gateway-ble.js": "bin/blynk-gateway-ble.js",
-    "blynk-gateway-usb.js": "bin/blynk-gateway-usb.js"
+    "blynk.js": "bin/blynk-client.js",
+    "blynk-client.js": "bin/blynk-client.js",
+    "blynk-ctrl.js": "bin/blynk-ctrl.js"
   },
   "engines": {
     "node": ">= 0.8.0"
@@ -23,16 +22,6 @@
     "./blynk-node.js": false
   },
   "dependencies": {
-  },
-  "optionalDependencies": {
-    "crc": "*",
-    "usb": "*",
-    "serialport": "*",
-    "noble": "*"
-  },
-  "devDependencies": {
-    "browserify": "*",
-    "uglify-js": "*"
   },
   "keywords": [
     "Arduino",
