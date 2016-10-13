@@ -25,10 +25,10 @@ dist/blynk-library-js.ipk: dist
 	rm -f control.tar.gz data.tar.gz debian-binary
 
 dist/blynk.js: dist
-	./node_modules/.bin/browserify . --standalone Blynk -o dist/blynk.js
+	browserify . --standalone Blynk -o dist/blynk-browser.js
 
 dist/blynk.min.js: dist dist/blynk.js
-	./node_modules/.bin/uglifyjs -o dist/blynk.min.js dist/blynk.js
+	uglifyjs -o dist/blynk-browser.min.js dist/blynk-browser.js
 
 clean:
 	rm -rf dist
