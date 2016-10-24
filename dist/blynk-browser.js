@@ -68,7 +68,7 @@ util.inherits(exports.WsClient, events.EventEmitter);
 },{"events":6,"util":10}],2:[function(require,module,exports){
 module.exports={
   "name": "blynk-library",
-  "version": "0.0.38",
+  "version": "0.0.40",
   "description": "Blynk library implementation for JavaScript (Node.js, Espruino)",
   "author": "Volodymyr Shymanskyy",
   "license": "MIT",
@@ -76,6 +76,7 @@ module.exports={
   "main": "./blynk.js",
   "bin": {
     "blynk.js": "bin/blynk-client.js",
+    "blynk-client.js": "bin/blynk-client.js",
     "blynk-ctrl.js": "bin/blynk-ctrl.js"
   },
   "engines": {
@@ -172,12 +173,18 @@ var MsgType = {
   BRIDGE        :  15,
   HW_SYNC       :  16,
   HW_INFO       :  17,
-  HW            :  20
+  SMS           :  18,
+  PROPERTY      :  19,
+  HW            :  20,
+
+  REDIRECT      :  41,
+  DEBUG_PRINT   :  55
 };
 
 var MsgStatus = {
   OK                    :  200,
   ILLEGAL_COMMAND       :  2,
+  ALREADY_REGISTERED    :  4,
   INVALID_TOKEN         :  9
 };
 
@@ -509,7 +516,7 @@ Blynk.prototype.onReceive = function(data) {
       //console.log('> ', msg_type, msg_id, string_of_enum(MsgStatus, msg_len));
       if (!self.profile) {
         if (self.timerConn && msg_id === 1) {
-          if (msg_len === MsgStatus.OK) {
+          if (msg_len === MsgStatus.OK || msg_len === MsgStatus.ALREADY_REGISTERED) {
             clearInterval(self.timerConn);
             self.timerConn = null;
             self.timerHb = setInterval(function() {
@@ -521,7 +528,7 @@ Blynk.prototype.onReceive = function(data) {
               var pack = require('./package.json');
               self.sendMsg(MsgType.HW_INFO, ['ver', 'v' + pack.version, 'dev', 'js']);
             } else {
-              self.sendMsg(MsgType.HW_INFO, ['dev', 'espruino']);              
+              self.sendMsg(MsgType.HW_INFO, ['dev', 'espruino']);
             }
             self.emit('connect');
           } else {
@@ -529,7 +536,7 @@ Blynk.prototype.onReceive = function(data) {
             //if invalid token, no point in trying to reconnect
             if (msg_len === MsgStatus.INVALID_TOKEN) {
               //letting main app know why we failed
-              this.emit('error', string_of_enum(MsgStatus, msg_len));
+              self.emit('error', string_of_enum(MsgStatus, msg_len));
               //console.log('Disconnecting because of invalid token');
               self.disconnect();
               if(self.timerConn) {
@@ -567,13 +574,13 @@ Blynk.prototype.onReceive = function(data) {
     {
       if (values[0] === 'vw') {
         var pin = parseInt(values[1]);
-        if (this.vpins[pin]) {
-          this.vpins[pin].emit('write', values.slice(2));
+        if (self.vpins[pin]) {
+          self.vpins[pin].emit('write', values.slice(2));
         }
       } else if (values[0] === 'vr') {
         var pin = parseInt(values[1]);
-        if (this.vpins[pin]) {
-          this.vpins[pin].emit('read');
+        if (self.vpins[pin]) {
+          self.vpins[pin].emit('read');
         }
       } else if (self.board.process(values)) {
 
@@ -581,6 +588,13 @@ Blynk.prototype.onReceive = function(data) {
         console.log('Invalid cmd: ', values[0]);
         //self.sendRsp(MsgType.RSP, msg_id, MsgStatus.ILLEGAL_COMMAND);
       }
+    } else if (msg_type === MsgType.REDIRECT) {
+      self.conn.addr = values[0];
+      //TODO: self.conn.port = parseInt(values[1]);
+      console.log('Redirecting to ', self.conn.addr, ':', self.conn.port);
+      self.disconnect();
+    } else if (msg_type === MsgType.DEBUG_PRINT) {
+      console.log('Server: ', values[0]);
     } else if (msg_type === MsgType.REGISTER ||
                msg_type === MsgType.SAVE_PROF ||
                msg_type === MsgType.ACTIVATE ||
@@ -699,6 +713,11 @@ Blynk.prototype.virtualWrite = function(pin, val) {
   this.sendMsg(MsgType.HW, ['vw', pin].concat(val));
 };
 
+Blynk.prototype.setProperty = function(pin, prop, val) {
+  this.sendMsg(MsgType.PROPERTY, [pin, prop].concat(val));
+};
+
+
 Blynk.prototype.syncAll = function() {
   this.sendMsg(MsgType.HW_SYNC);
 };
@@ -720,6 +739,9 @@ Blynk.prototype.tweet = function(message) {
   this.sendMsg(MsgType.TWEET, [message]);
 };
 
+Blynk.prototype.sms = function(message) {
+  this.sendMsg(MsgType.SMS, [message]);
+};
 
 if (typeof module !== 'undefined' && ('exports' in module)) {
   exports.Blynk = Blynk;
