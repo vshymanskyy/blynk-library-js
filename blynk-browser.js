@@ -39,7 +39,7 @@ exports.WsClient = function(options) {
       self.sock.close();
     }
     try {
-      self.sock = new WebSocket('ws://' + self.addr + ':' + self.port + '/websocket');
+      self.sock = new WebSocket('ws://' + self.addr + ':' + self.port + '/websockets');
       self.sock.binaryType = 'arraybuffer';
       self.sock.onopen = function(evt) { done() };
       self.sock.onclose = function(evt) { self.emit('end'); };
