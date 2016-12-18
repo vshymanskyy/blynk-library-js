@@ -40,7 +40,7 @@ exports.WsClient = function(options) {
       self.sock.close();
     }
     try {
-      self.sock = new WebSocket('ws://' + self.addr + ':' + self.port + '/websocket');
+      self.sock = new WebSocket('ws://' + self.addr + ':' + self.port + '/websockets');
       self.sock.binaryType = 'arraybuffer';
       self.sock.onopen = function(evt) { done() };
       self.sock.onclose = function(evt) { self.emit('end'); };
@@ -590,7 +590,8 @@ Blynk.prototype.onReceive = function(data) {
       }
     } else if (msg_type === MsgType.REDIRECT) {
       self.conn.addr = values[0];
-      //TODO: self.conn.port = parseInt(values[1]);
+      if (values[1])
+        self.conn.port = parseInt(values[1]);
       console.log('Redirecting to ', self.conn.addr, ':', self.conn.port);
       self.disconnect();
     } else if (msg_type === MsgType.DEBUG_PRINT) {
