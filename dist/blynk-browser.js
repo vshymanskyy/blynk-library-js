@@ -68,7 +68,7 @@ util.inherits(exports.WsClient, events.EventEmitter);
 },{"events":6,"util":10}],2:[function(require,module,exports){
 module.exports={
   "name": "blynk-library",
-  "version": "0.0.40",
+  "version": "0.0.41",
   "description": "Blynk library implementation for JavaScript (Node.js, Espruino)",
   "author": "Volodymyr Shymanskyy",
   "license": "MIT",
@@ -590,8 +590,9 @@ Blynk.prototype.onReceive = function(data) {
       }
     } else if (msg_type === MsgType.REDIRECT) {
       self.conn.addr = values[0];
-      if (values[1])
+      if (values[1]) {
         self.conn.port = parseInt(values[1]);
+      }
       console.log('Redirecting to ', self.conn.addr, ':', self.conn.port);
       self.disconnect();
     } else if (msg_type === MsgType.DEBUG_PRINT) {
