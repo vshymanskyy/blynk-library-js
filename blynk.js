@@ -479,7 +479,9 @@ Blynk.prototype.onReceive = function(data) {
       }
     } else if (msg_type === MsgType.REDIRECT) {
       self.conn.addr = values[0];
-      //TODO: self.conn.port = parseInt(values[1]);
+      if (values[1]) {
+        self.conn.port = parseInt(values[1]);
+      }
       console.log('Redirecting to ', self.conn.addr, ':', self.conn.port);
       self.disconnect();
     } else if (msg_type === MsgType.DEBUG_PRINT) {
