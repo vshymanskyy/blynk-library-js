@@ -68,7 +68,7 @@ util.inherits(exports.WsClient, events.EventEmitter);
 },{"events":6,"util":10}],2:[function(require,module,exports){
 module.exports={
   "name": "blynk-library",
-  "version": "0.0.41",
+  "version": "0.0.43",
   "description": "Blynk library implementation for JavaScript (Node.js, Espruino)",
   "author": "Volodymyr Shymanskyy",
   "license": "MIT",
