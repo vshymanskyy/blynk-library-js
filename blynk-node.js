@@ -166,8 +166,12 @@ exports.SslClient = function(options) {
     if (self.key)  { opts.key  = fs.readFileSync(self.key); }
     if (self.cert) { opts.cert = fs.readFileSync(self.cert); }
     if (self.pass) { opts.passphrase = self.pass; }
-    if (self.ca)   { opts.ca   = self.ca.map(fs.readFileSync); }
-    
+    if (self.ca)   {
+      opts.ca = self.ca.map(function(item){
+        return fs.readFileSync(item);
+      });
+    }
+
     console.log("Connecting to:", self.addr, self.port);
     var sock = new net.Socket();
     sock.connect({
