@@ -326,8 +326,16 @@ exports.BoardMRAA = function() {
 
 exports.BoardOnOff = function() {
   var self = this;
-  var Gpio = require('onoff').Gpio;
-  console.log("OnOff mode");
+  var Gpio;
+  try {
+    Gpio = require('onoff').Gpio;
+    console.log("OnOff mode");
+  } catch (e) {
+    // Workaround for Omega
+    Gpio = require('/usr/bin/onoff-node/onoff').Gpio;
+    console.log("OnOff-Omega mode");
+  }
+
   this.init = function(blynk) {
     self.blynk = blynk;
   };
