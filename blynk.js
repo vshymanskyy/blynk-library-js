@@ -415,7 +415,7 @@ Blynk.prototype.onReceive = function(data) {
             console.log('Authorized');
             if (isNode()) {
               var pack = require('./package.json');
-              self.sendMsg(MsgType.HW_INFO, ['ver', 'v' + pack.version, 'dev', 'js']);
+              self.sendMsg(MsgType.HW_INFO, ['ver', pack.version, 'dev', 'js']);
             } else {
               self.sendMsg(MsgType.HW_INFO, ['dev', 'espruino']);
             }
