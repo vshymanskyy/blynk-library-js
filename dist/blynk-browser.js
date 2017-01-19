@@ -68,7 +68,7 @@ util.inherits(exports.WsClient, events.EventEmitter);
 },{"events":6,"util":10}],2:[function(require,module,exports){
 module.exports={
   "name": "blynk-library",
-  "version": "0.0.43",
+  "version": "0.4.4",
   "description": "Blynk library implementation for JavaScript (Node.js, Espruino)",
   "author": "Volodymyr Shymanskyy",
   "license": "MIT",
@@ -526,7 +526,7 @@ Blynk.prototype.onReceive = function(data) {
             console.log('Authorized');
             if (isNode()) {
               var pack = require('./package.json');
-              self.sendMsg(MsgType.HW_INFO, ['ver', 'v' + pack.version, 'dev', 'js']);
+              self.sendMsg(MsgType.HW_INFO, ['ver', pack.version, 'dev', 'js']);
             } else {
               self.sendMsg(MsgType.HW_INFO, ['dev', 'espruino']);
             }
