@@ -68,16 +68,15 @@ util.inherits(exports.WsClient, events.EventEmitter);
 },{"events":6,"util":10}],2:[function(require,module,exports){
 module.exports={
   "name": "blynk-library",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "description": "Blynk library implementation for JavaScript (Node.js, Espruino)",
   "author": "Volodymyr Shymanskyy",
   "license": "MIT",
 
   "main": "./blynk.js",
   "bin": {
-    "blynk.js": "bin/blynk-client.js",
-    "blynk-client.js": "bin/blynk-client.js",
-    "blynk-ctrl.js": "bin/blynk-ctrl.js"
+    "blynk-client": "bin/blynk-client.js",
+    "blynk-ctrl": "bin/blynk-ctrl.js"
   },
   "engines": {
     "node": ">= 0.8.0"

@@ -15,8 +15,8 @@ dist/blynk-library-js.ipk: dist
 	mkdir -p ipk/usr/local/lib/node_modules/blynk-library
 	cp -r blynk-node.js blynk.js *.json certs bin ipk/usr/local/lib/node_modules/blynk-library
 	mkdir -p ipk/bin
-	ln -s /usr/local/lib/node_modules/blynk-library/bin/blynk.js ipk/bin/blynk.js
-	ln -s /usr/local/lib/node_modules/blynk-library/bin/blynk-ctrl.js ipk/bin/blynk-ctrl.js
+	ln -s /usr/local/lib/node_modules/blynk-library/bin/blynk-client ipk/bin/blynk-client.js
+	ln -s /usr/local/lib/node_modules/blynk-library/bin/blynk-ctrl ipk/bin/blynk-ctrl.js
 	tar czvf control.tar.gz control
 	cd ipk; tar czvf ../data.tar.gz .; cd ..
 	echo 2.0 > debian-binary
