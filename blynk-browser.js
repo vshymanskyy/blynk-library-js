@@ -27,6 +27,7 @@ exports.WsClient = function(options) {
   var options = options || {};
   self.addr = options.addr || "blynk-cloud.com";
   self.port = options.port || 8082;
+  self.path = options.path || "/websockets";
 
   this.write = function(data) {
     if (self.sock) {
@@ -39,7 +40,7 @@ exports.WsClient = function(options) {
       self.sock.close();
     }
     try {
-      self.sock = new WebSocket('ws://' + self.addr + ':' + self.port + '/websockets');
+      self.sock = new WebSocket('ws://' + self.addr + ':' + self.port + options.path);
       self.sock.binaryType = 'arraybuffer';
       self.sock.onopen = function(evt) { done() };
       self.sock.onclose = function(evt) { self.emit('end'); };
