@@ -26,9 +26,9 @@ exports.TcpClient = function(options) {
 
   var net = require('net');
 
-  this.write = function(data) {
+  this.write = function(data, encoding) {
     if (self.sock) {
-      self.sock.write(data, 'binary');
+      self.sock.write(data, encoding || 'binary');
     }
   };
 
