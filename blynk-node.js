@@ -82,9 +82,9 @@ exports.TcpServer = function(options) {
 
   var net = require('net');
 
-  this.write = function(data) {
+  this.write = function(data, encoding) {
     if (self.sock) {
-      self.sock.write(data, 'binary');
+      self.sock.write(data, encoding || 'binary');
     }
   };
 
@@ -145,9 +145,9 @@ exports.SslClient = function(options) {
   var tls = require('tls');
   var fs = require('fs');
 
-  this.write = function(data) {
+  this.write = function(data, encoding) {
     if (self.sock) {
-      self.sock.write(data, 'binary');
+      self.sock.write(data, encoding || 'binary');
     }
   };
 
@@ -235,9 +235,9 @@ exports.SslServer = function(options) {
   var tls = require('tls');
   var fs = require('fs');
 
-  this.write = function(data) {
+  this.write = function(data, encoding) {
     if (self.sock) {
-      self.sock.write(data, 'binary');
+      self.sock.write(data, encoding || 'binary');
     }
   };
 
