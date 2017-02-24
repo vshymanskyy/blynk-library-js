@@ -39,7 +39,7 @@ exports.TcpClient = function(options) {
     console.log("Connecting to TCP:", self.addr, self.port);
     self.sock = new net.Socket();
     self.sock.setNoDelay(true);
-    self.sock.setEncoding('utf8');
+    self.sock.setEncoding('binary');
     self.sock.connect({
       host: self.addr,
       family: 4,
@@ -188,7 +188,7 @@ exports.SslClient = function(options) {
         }
         console.log('Connected');
         self.sock.setNoDelay(true);
-        self.sock.setEncoding('utf8');
+        self.sock.setEncoding('binary');
         self.sock.on('data', function(data) {
           self.emit('data', data);
         });
@@ -257,7 +257,7 @@ exports.SslServer = function(options) {
       self.sock = conn;
       console.log(self.sock.authorized ? 'Authorized' : 'Unauthorized');
       self.sock.setNoDelay(true);
-      self.sock.setEncoding('utf8');
+      self.sock.setEncoding('binary');
       self.sock.on('data', function(data) {
         self.emit('data', data);
       });
@@ -329,11 +329,9 @@ exports.BoardOnOff = function() {
   var Gpio;
   try {
     Gpio = require('onoff').Gpio;
-    console.log("OnOff mode");
   } catch (e) {
     // Workaround for Omega
     Gpio = require('/usr/bin/onoff-node/onoff').Gpio;
-    console.log("OnOff-Omega mode");
   }
 
   this.init = function(blynk) {
