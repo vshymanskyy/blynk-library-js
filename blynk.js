@@ -528,6 +528,7 @@ Blynk.prototype.sendRsp = function(msg_type, msg_id, msg_len, data, encoding) {
 Blynk.prototype.sendMsg = function(msg_type, values, msg_id, encoding) {
   var values = values || [''];
   var data = values.join('\0');
+  console.dir(data);
   this.sendRsp(msg_type, msg_id, data.length, data, encoding);
 };
 
