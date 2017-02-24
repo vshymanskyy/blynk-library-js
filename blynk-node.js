@@ -39,7 +39,7 @@ exports.TcpClient = function(options) {
     console.log("Connecting to TCP:", self.addr, self.port);
     self.sock = new net.Socket();
     self.sock.setNoDelay(true);
-    self.sock.setEncoding('binary');
+    self.sock.setEncoding('utf8');
     self.sock.connect({
       host: self.addr,
       family: 4,
@@ -97,7 +97,7 @@ exports.TcpServer = function(options) {
       self.sock = conn;
       console.log('Connected');
       self.sock.setNoDelay(true);
-      self.sock.setEncoding('binary');
+      self.sock.setEncoding('utf8');
       self.sock.on('data', function(data) {
         self.emit('data', data);
       });
@@ -188,7 +188,7 @@ exports.SslClient = function(options) {
         }
         console.log('Connected');
         self.sock.setNoDelay(true);
-        self.sock.setEncoding('binary');
+        self.sock.setEncoding('utf8');
         self.sock.on('data', function(data) {
           self.emit('data', data);
         });
@@ -257,7 +257,7 @@ exports.SslServer = function(options) {
       self.sock = conn;
       console.log(self.sock.authorized ? 'Authorized' : 'Unauthorized');
       self.sock.setNoDelay(true);
-      self.sock.setEncoding('binary');
+      self.sock.setEncoding('utf8');
       self.sock.on('data', function(data) {
         self.emit('data', data);
       });
