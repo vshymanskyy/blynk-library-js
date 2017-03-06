@@ -28,6 +28,7 @@ exports.WsClient = function(options) {
   var options = options || {};
   self.addr = options.addr || "blynk-cloud.com";
   self.port = options.port || 8082;
+  self.path = options.path || "/websockets";
 
   this.write = function(data) {
     if (self.sock) {
@@ -40,7 +41,7 @@ exports.WsClient = function(options) {
       self.sock.close();
     }
     try {
-      self.sock = new WebSocket('ws://' + self.addr + ':' + self.port + '/websockets');
+      self.sock = new WebSocket('ws://' + self.addr + ':' + self.port + options.path);
       self.sock.binaryType = 'arraybuffer';
       self.sock.onopen = function(evt) { done() };
       self.sock.onclose = function(evt) { self.emit('end'); };
@@ -65,54 +66,9 @@ exports.WsClient = function(options) {
 
 util.inherits(exports.WsClient, events.EventEmitter);
 
-},{"events":6,"util":10}],2:[function(require,module,exports){
-module.exports={
-  "name": "blynk-library",
-  "version": "0.4.5",
-  "description": "Blynk library implementation for JavaScript (Node.js, Espruino)",
-  "author": "Volodymyr Shymanskyy",
-  "license": "MIT",
-
-  "main": "./blynk.js",
-  "bin": {
-    "blynk-client": "bin/blynk-client.js",
-    "blynk-ctrl": "bin/blynk-ctrl.js"
-  },
-  "engines": {
-    "node": ">= 0.8.0"
-  },
-  "scripts": {
-    "prepublish": "make clean all",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "browser": {
-    "./blynk-node.js": false
-  },
-  "dependencies": {
-  },
-  "keywords": [
-    "Arduino",
-    "Espruino",
-    "Raspberry Pi",
-    "IoT",
-    "Internet of Things"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/vshymanskyy/blynk-library-js"
-  },
-  "bugs": {
-    "url": "https://github.com/vshymanskyy/blynk-library-js/issues"
-  }
-}
-
-},{}],3:[function(require,module,exports){
+},{"events":5,"util":9}],2:[function(require,module,exports){
 (function (process){
 /* Copyright (c) 2015 Volodymyr Shymanskyy. See the file LICENSE for copying permission. */
-
-/*
-
-*/
 
 'use strict';
 
@@ -171,7 +127,7 @@ var MsgType = {
   NOTIFY        :  14,
   BRIDGE        :  15,
   HW_SYNC       :  16,
-  HW_INFO       :  17,
+  INTERNAL      :  17,
   SMS           :  18,
   PROPERTY      :  19,
   HW            :  20,
@@ -193,11 +149,12 @@ var BlynkState = {
   DISCONNECTED  :  3
 };
 
-if (isNode()) {
-  var bl_node = require('./blynk-node.js');
+if (isBrowser()) {
+  var bl_browser = require('./blynk-browser.js');
   var events = require('events');
   var util = require('util');
-} else if (isBrowser()) {
+} else if (isNode()) {
+  var bl_node = require('./blynk-node.js');
   var events = require('events');
   var util = require('util');
 }
@@ -408,7 +365,6 @@ var Blynk = function(auth, options) {
   } else if (isEspruino()) {
     this.conn = new EspruinoTCP(options);
   } else if (isBrowser()) {
-    var bl_browser = require('./blynk-browser.js');
     this.conn = new bl_browser.WsClient(options);
   } else {
     this.conn = new bl_node.SslClient(options);
@@ -509,10 +465,9 @@ Blynk.prototype.onReceive = function(data) {
     var msg_len  = self.buff_in.charCodeAt(3) << 8 | self.buff_in.charCodeAt(4);
 
     if (msg_id === 0)  { return self.disconnect(); }
-    var consumed = 5;
 
     if (msg_type === MsgType.RSP) {
-      //console.log('> ', msg_type, msg_id, string_of_enum(MsgStatus, msg_len));
+      //console.log('> ', string_of_enum(MsgType, msg_type), msg_id, string_of_enum(MsgStatus, msg_len));
       if (!self.profile) {
         if (self.timerConn && msg_id === 1) {
           if (msg_len === MsgStatus.OK || msg_len === MsgStatus.ALREADY_REGISTERED) {
@@ -523,12 +478,7 @@ Blynk.prototype.onReceive = function(data) {
               self.sendMsg(MsgType.PING);
             }, self.heartbeat);
             console.log('Authorized');
-            if (isNode()) {
-              var pack = require('./package.json');
-              self.sendMsg(MsgType.HW_INFO, ['ver', pack.version, 'dev', 'js']);
-            } else {
-              self.sendMsg(MsgType.HW_INFO, ['dev', 'espruino']);
-            }
+            self.sendMsg(MsgType.INTERNAL, ['ver', '0.4.7', 'dev', 'js']);
             self.emit('connect');
           } else {
             console.log('Could not login:', string_of_enum(MsgStatus, msg_len));
@@ -558,7 +508,12 @@ Blynk.prototype.onReceive = function(data) {
     }
     var values = self.buff_in.substr(5, msg_len).split('\0');
     self.buff_in = self.buff_in.substr(msg_len+5);
-    //console.log('> ', msg_type, msg_id, msg_len, ' : ', values);
+
+    /*if (msg_len) {
+      console.log('> ', string_of_enum(MsgType, msg_type), msg_id, msg_len, values.join('|'));
+    } else {
+      console.log('> ', string_of_enum(MsgType, msg_type), msg_id, msg_len);
+    }*/
 
     if (msg_type === MsgType.LOGIN ||
         msg_type === MsgType.PING)
@@ -598,6 +553,7 @@ Blynk.prototype.onReceive = function(data) {
       console.log('Server: ', values[0]);
     } else if (msg_type === MsgType.REGISTER ||
                msg_type === MsgType.SAVE_PROF ||
+               msg_type === MsgType.INTERNAL ||
                msg_type === MsgType.ACTIVATE ||
                msg_type === MsgType.DEACTIVATE ||
                msg_type === MsgType.REFRESH)
@@ -615,13 +571,18 @@ Blynk.prototype.sendRsp = function(msg_type, msg_id, msg_len, data) {
   data = data || "";
   msg_id = msg_id || (self.msg_id++);
   if (msg_type == MsgType.RSP) {
-    //console.log('< ', msg_type, msg_id, string_of_enum(MsgStatus, msg_len));
-    self.conn.write(blynkHeader(msg_type, msg_id, msg_len));
+    //console.log('< ', string_of_enum(MsgType, msg_type), msg_id, string_of_enum(MsgStatus, msg_len));
+    data = blynkHeader(msg_type, msg_id, msg_len)
   } else {
-    //console.log('< ', msg_type, msg_id, msg_len, ' : ', data.split('\0'));
-    self.conn.write(blynkHeader(msg_type, msg_id, msg_len) + data);
+    /*if (msg_len) {
+      console.log('< ', string_of_enum(MsgType, msg_type), msg_id, msg_len, data.split('\0').join('|'));
+    } else {
+      console.log('< ', string_of_enum(MsgType, msg_type), msg_id, msg_len);
+    }*/
+    data = blynkHeader(msg_type, msg_id, msg_len) + data;
   }
 
+  self.conn.write(data)
 
   // TODO: track also recieving time
   /*if (!self.profile) {
@@ -752,6 +713,8 @@ if (typeof module !== 'undefined' && ('exports' in module)) {
     exports.EspruinoTCP = EspruinoTCP;
     exports.BoardLinux = BoardEspruinoLinux;
     exports.BoardPico  = BoardEspruinoPico;
+  } else if (isBrowser()) {
+    exports.WsClient = bl_browser.WsClient;
   } else if (isNode()) {
     exports.TcpClient = bl_node.TcpClient;
     exports.TcpServer = bl_node.TcpServer;
@@ -763,11 +726,11 @@ if (typeof module !== 'undefined' && ('exports' in module)) {
 }
 
 }).call(this,require('_process'))
-},{"./blynk-browser.js":1,"./blynk-node.js":5,"./package.json":2,"_process":7,"events":6,"net":4,"util":10}],4:[function(require,module,exports){
+},{"./blynk-browser.js":1,"./blynk-node.js":4,"_process":6,"events":5,"net":3,"util":9}],3:[function(require,module,exports){
 
-},{}],5:[function(require,module,exports){
-arguments[4][4][0].apply(exports,arguments)
-},{"dup":4}],6:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
+arguments[4][3][0].apply(exports,arguments)
+},{"dup":3}],5:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -1071,7 +1034,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],7:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -1253,7 +1216,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],8:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -1278,14 +1241,14 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],9:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],10:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -1875,5 +1838,5 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":9,"_process":7,"inherits":8}]},{},[3])(3)
+},{"./support/isBuffer":8,"_process":6,"inherits":7}]},{},[2])(2)
 });

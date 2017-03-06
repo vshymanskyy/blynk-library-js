@@ -1,6 +1,6 @@
 {
   "name": "blynk-library",
-  "version": "0.4.6",
+  "version": "0.4.7",
   "description": "Blynk library implementation for JavaScript (Node.js, Espruino)",
   "author": "Volodymyr Shymanskyy",
   "license": "MIT",
