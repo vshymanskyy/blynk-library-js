@@ -57,7 +57,11 @@
       $("#howto").hide();
     
       var auth = $("#auth").val();
-      var blynk = new Blynk.Blynk(auth);
+      var blynk = new Blynk.Blynk(auth, {
+        connector: new Blynk.WsClient({
+          addr: 'localhost', port:8080, path: '/'
+        })
+      });
 
       var v0 = new blynk.VirtualPin(0);
       var v1 = new blynk.VirtualPin(1);

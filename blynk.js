@@ -1,9 +1,5 @@
 /* Copyright (c) 2015 Volodymyr Shymanskyy. See the file LICENSE for copying permission. */
 
-/*
-
-*/
-
 'use strict';
 
 var C = {
@@ -61,7 +57,7 @@ var MsgType = {
   NOTIFY        :  14,
   BRIDGE        :  15,
   HW_SYNC       :  16,
-  HW_INFO       :  17,
+  INTERNAL      :  17,
   SMS           :  18,
   PROPERTY      :  19,
   HW            :  20,
@@ -83,11 +79,12 @@ var BlynkState = {
   DISCONNECTED  :  3
 };
 
-if (isNode()) {
-  var bl_node = require('./blynk-node.js');
+if (isBrowser()) {
+  var bl_browser = require('./blynk-browser.js');
   var events = require('events');
   var util = require('util');
-} else if (isBrowser()) {
+} else if (isNode()) {
+  var bl_node = require('./blynk-node.js');
   var events = require('events');
   var util = require('util');
 }
@@ -298,7 +295,6 @@ var Blynk = function(auth, options) {
   } else if (isEspruino()) {
     this.conn = new EspruinoTCP(options);
   } else if (isBrowser()) {
-    var bl_browser = require('./blynk-browser.js');
     this.conn = new bl_browser.WsClient(options);
   } else {
     this.conn = new bl_node.SslClient(options);
@@ -399,10 +395,9 @@ Blynk.prototype.onReceive = function(data) {
     var msg_len  = self.buff_in.charCodeAt(3) << 8 | self.buff_in.charCodeAt(4);
 
     if (msg_id === 0)  { return self.disconnect(); }
-    var consumed = 5;
 
     if (msg_type === MsgType.RSP) {
-      //console.log('> ', msg_type, msg_id, string_of_enum(MsgStatus, msg_len));
+      //console.log('> ', string_of_enum(MsgType, msg_type), msg_id, string_of_enum(MsgStatus, msg_len));
       if (!self.profile) {
         if (self.timerConn && msg_id === 1) {
           if (msg_len === MsgStatus.OK || msg_len === MsgStatus.ALREADY_REGISTERED) {
@@ -413,12 +408,7 @@ Blynk.prototype.onReceive = function(data) {
               self.sendMsg(MsgType.PING);
             }, self.heartbeat);
             console.log('Authorized');
-            if (isNode()) {
-              var pack = require('./package.json');
-              self.sendMsg(MsgType.HW_INFO, ['ver', pack.version, 'dev', 'js']);
-            } else {
-              self.sendMsg(MsgType.HW_INFO, ['dev', 'espruino']);
-            }
+            self.sendMsg(MsgType.INTERNAL, ['ver', '0.4.6', 'dev', 'js']);
             self.emit('connect');
           } else {
             console.log('Could not login:', string_of_enum(MsgStatus, msg_len));
@@ -448,7 +438,12 @@ Blynk.prototype.onReceive = function(data) {
     }
     var values = self.buff_in.substr(5, msg_len).split('\0');
     self.buff_in = self.buff_in.substr(msg_len+5);
-    //console.log('> ', msg_type, msg_id, msg_len, ' : ', values);
+
+    /*if (msg_len) {
+      console.log('> ', string_of_enum(MsgType, msg_type), msg_id, msg_len, values.join('|'));
+    } else {
+      console.log('> ', string_of_enum(MsgType, msg_type), msg_id, msg_len);
+    }*/
 
     if (msg_type === MsgType.LOGIN ||
         msg_type === MsgType.PING)
@@ -488,6 +483,7 @@ Blynk.prototype.onReceive = function(data) {
       console.log('Server: ', values[0]);
     } else if (msg_type === MsgType.REGISTER ||
                msg_type === MsgType.SAVE_PROF ||
+               msg_type === MsgType.INTERNAL ||
                msg_type === MsgType.ACTIVATE ||
                msg_type === MsgType.DEACTIVATE ||
                msg_type === MsgType.REFRESH)
@@ -505,13 +501,18 @@ Blynk.prototype.sendRsp = function(msg_type, msg_id, msg_len, data) {
   data = data || "";
   msg_id = msg_id || (self.msg_id++);
   if (msg_type == MsgType.RSP) {
-    //console.log('< ', msg_type, msg_id, string_of_enum(MsgStatus, msg_len));
-    self.conn.write(blynkHeader(msg_type, msg_id, msg_len));
+    //console.log('< ', string_of_enum(MsgType, msg_type), msg_id, string_of_enum(MsgStatus, msg_len));
+    data = blynkHeader(msg_type, msg_id, msg_len)
   } else {
-    //console.log('< ', msg_type, msg_id, msg_len, ' : ', data.split('\0'));
-    self.conn.write(blynkHeader(msg_type, msg_id, msg_len) + data);
+    /*if (msg_len) {
+      console.log('< ', string_of_enum(MsgType, msg_type), msg_id, msg_len, data.split('\0').join('|'));
+    } else {
+      console.log('< ', string_of_enum(MsgType, msg_type), msg_id, msg_len);
+    }*/
+    data = blynkHeader(msg_type, msg_id, msg_len) + data;
   }
 
+  self.conn.write(data)
 
   // TODO: track also recieving time
   /*if (!self.profile) {
@@ -642,6 +643,8 @@ if (typeof module !== 'undefined' && ('exports' in module)) {
     exports.EspruinoTCP = EspruinoTCP;
     exports.BoardLinux = BoardEspruinoLinux;
     exports.BoardPico  = BoardEspruinoPico;
+  } else if (isBrowser()) {
+    exports.WsClient = bl_browser.WsClient;
   } else if (isNode()) {
     exports.TcpClient = bl_node.TcpClient;
     exports.TcpServer = bl_node.TcpServer;

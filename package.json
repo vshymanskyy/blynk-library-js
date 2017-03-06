@@ -1,6 +1,6 @@
 {
   "name": "blynk-library",
-  "version": "0.4.5",
+  "version": "0.4.6",
   "description": "Blynk library implementation for JavaScript (Node.js, Espruino)",
   "author": "Volodymyr Shymanskyy",
   "license": "MIT",
@@ -11,7 +11,7 @@
     "blynk-ctrl": "bin/blynk-ctrl.js"
   },
   "engines": {
-    "node": ">= 0.8.0"
+    "node": ">= 0.12.0"
   },
   "scripts": {
     "prepublish": "make clean all",
