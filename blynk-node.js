@@ -26,9 +26,9 @@ exports.TcpClient = function(options) {
 
   var net = require('net');
 
-  this.write = function(data) {
+  this.write = function(data, encoding) {
     if (self.sock) {
-      self.sock.write(data, 'binary');
+      self.sock.write(data, encoding || 'binary');
     }
   };
 
@@ -82,9 +82,9 @@ exports.TcpServer = function(options) {
 
   var net = require('net');
 
-  this.write = function(data) {
+  this.write = function(data, encoding) {
     if (self.sock) {
-      self.sock.write(data, 'binary');
+      self.sock.write(data, encoding || 'binary');
     }
   };
 
@@ -97,7 +97,7 @@ exports.TcpServer = function(options) {
       self.sock = conn;
       console.log('Connected');
       self.sock.setNoDelay(true);
-      self.sock.setEncoding('binary');
+      self.sock.setEncoding('utf8');
       self.sock.on('data', function(data) {
         self.emit('data', data);
       });
@@ -145,9 +145,9 @@ exports.SslClient = function(options) {
   var tls = require('tls');
   var fs = require('fs');
 
-  this.write = function(data) {
+  this.write = function(data, encoding) {
     if (self.sock) {
-      self.sock.write(data, 'binary');
+      self.sock.write(data, encoding || 'binary');
     }
   };
 
@@ -254,9 +254,9 @@ exports.SslServer = function(options) {
   var tls = require('tls');
   var fs = require('fs');
 
-  this.write = function(data) {
+  this.write = function(data, encoding) {
     if (self.sock) {
-      self.sock.write(data, 'binary');
+      self.sock.write(data, encoding || 'binary');
     }
   };
 
@@ -348,11 +348,9 @@ exports.BoardOnOff = function() {
   var Gpio;
   try {
     Gpio = require('onoff').Gpio;
-    console.log("OnOff mode");
   } catch (e) {
     // Workaround for Omega
     Gpio = require('/usr/bin/onoff-node/onoff').Gpio;
-    console.log("OnOff-Omega mode");
   }
 
   this.init = function(blynk) {

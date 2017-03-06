@@ -316,8 +316,8 @@ var Blynk = function(auth, options) {
     this.pin = vPin;
     self.vpins[vPin] = this;
 
-    this.write = function(value) {
-      self.virtualWrite(this.pin, value);
+    this.write = function(value, encoding) {
+      self.virtualWrite(this.pin, value, encoding);
     };
   };
 
@@ -500,7 +500,7 @@ Blynk.prototype.onReceive = function(data) {
   } // end while
 };
 
-Blynk.prototype.sendRsp = function(msg_type, msg_id, msg_len, data) {
+Blynk.prototype.sendRsp = function(msg_type, msg_id, msg_len, data, encoding) {
   var self = this;
   data = data || "";
   msg_id = msg_id || (self.msg_id++);
@@ -509,7 +509,7 @@ Blynk.prototype.sendRsp = function(msg_type, msg_id, msg_len, data) {
     self.conn.write(blynkHeader(msg_type, msg_id, msg_len));
   } else {
     //console.log('< ', msg_type, msg_id, msg_len, ' : ', data.split('\0'));
-    self.conn.write(blynkHeader(msg_type, msg_id, msg_len) + data);
+    self.conn.write(blynkHeader(msg_type, msg_id, msg_len) + data, encoding || 'binary');
   }
 
 
@@ -525,10 +525,11 @@ Blynk.prototype.sendRsp = function(msg_type, msg_id, msg_len, data) {
   }*/
 };
 
-Blynk.prototype.sendMsg = function(msg_type, values, msg_id) {
+Blynk.prototype.sendMsg = function(msg_type, values, msg_id, encoding) {
   var values = values || [''];
   var data = values.join('\0');
-  this.sendRsp(msg_type, msg_id, data.length, data);
+  var data_bytes = Buffer.byteLength(data, 'utf8');
+  this.sendRsp(msg_type, msg_id, data_bytes, data, encoding);
 };
 
 /*
@@ -600,8 +601,8 @@ Blynk.prototype.end = function() {
 };
 
 
-Blynk.prototype.virtualWrite = function(pin, val) {
-  this.sendMsg(MsgType.HW, ['vw', pin].concat(val));
+Blynk.prototype.virtualWrite = function(pin, val, encoding) {
+  this.sendMsg(MsgType.HW, ['vw', pin].concat(val), null, encoding);
 };
 
 Blynk.prototype.setProperty = function(pin, prop, val) {
@@ -622,8 +623,8 @@ Blynk.prototype.email = function(to, topic, message) {
   this.sendMsg(MsgType.EMAIL, [to, topic, message]);
 };
 
-Blynk.prototype.notify = function(message) {
-  this.sendMsg(MsgType.NOTIFY, [message]);
+Blynk.prototype.notify = function(message, encoding) {
+  this.sendMsg(MsgType.NOTIFY, [message], null, encoding);
 };
 
 Blynk.prototype.tweet = function(message) {
