@@ -163,17 +163,36 @@ exports.SslClient = function(options) {
       rejectUnauthorized: false,
       family: 4
     };
-    if (self.key)  { opts.key  = fs.readFileSync(self.key); }
-    if (self.cert) { opts.cert = fs.readFileSync(self.cert); }
+    if (self.key) { 
+      if (Buffer.isBuffer(self.key)) {
+        opts.key = self.key;
+      } else {
+        opts.key = fs.readFileSync(self.key); 
+      }
+    }
+    if (self.cert) { 
+      if (Buffer.isBuffer(self.cert)) {
+        opts.cert = self.cert;
+      } else {
+        opts.cert = fs.readFileSync(self.cert); 
+      }
+    }
     if (self.pass) { opts.passphrase = self.pass; }
     if (self.ca)   {
-      opts.ca = self.ca.map(function(item){
-        return fs.readFileSync(item);
-      });
+      if (Buffer.isBuffer(options.ca)) {
+        opts.ca = options.ca;
+      } else {
+        opts.ca = self.ca.map(function(item){
+          return fs.readFileSync(item);
+        });
+      }
     }
 
     console.log("Connecting to:", self.addr, self.port);
     var sock = new net.Socket();
+    sock.on('error', function(e) {
+      console.log(e)
+    });
     sock.connect({
       host: self.addr,
       family: 4,
