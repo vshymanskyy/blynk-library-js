@@ -527,9 +527,11 @@ Blynk.prototype.sendRsp = function(msg_type, msg_id, msg_len, data) {
 };
 
 Blynk.prototype.sendMsg = function(msg_type, values, msg_id) {
-  var values = values || [''];
-  var data = values.join('\0');
-  this.sendRsp(msg_type, msg_id, data.length, data);
+  if (this.timerHb) {
+    var values = values || [''];
+    var data = values.join('\0');
+    this.sendRsp(msg_type, msg_id, data.length, data);
+  }
 };
 
 /*
