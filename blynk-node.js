@@ -330,11 +330,11 @@ exports.BoardMRAA = function() {
       case 'dr': {
         var pin = new mraa.Gpio(parseInt(values[1]));
         pin.dir(mraa.DIR_IN);
-        self.blynk.sendMsg(MsgType.HW, null, ['dw', values[1], pin.read()]);
+        self.blynk.sendMsg(MsgType.HW, ['dw', values[1], pin.read()]);
       } break;
       case 'ar': {
         var pin = new mraa.Aio(parseInt(values[1])-14); // TODO
-        self.blynk.sendMsg(MsgType.HW, null, ['aw', values[1], pin.read()]);
+        self.blynk.sendMsg(MsgType.HW, ['aw', values[1], pin.read()]);
       } break;
       default:
         return false;
@@ -370,7 +370,7 @@ exports.BoardOnOff = function() {
         var pin = new Gpio(values[1], 'in');
         pin.read(function(err, value) {
           if (!err) {
-            self.blynk.sendMsg(MsgType.HW, null, ['dw', values[1], value]);
+            self.blynk.sendMsg(MsgType.HW, ['dw', values[1], value]);
           }
         });
         break;
