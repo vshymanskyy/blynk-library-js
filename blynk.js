@@ -370,6 +370,15 @@ var Blynk = function(auth, options) {
       self.virtualWrite(this.pin, 0);
     };
   };
+  
+  this.WidgetMAP = function(vPin) {
+    this.pin = vPin;
+    
+    this.location = function(index, lat, lon, value) {
+      var locationdata = [index, lat, lon, value]
+      self.virtualWrite(this.pin, locationdata);
+    }
+  };
 
   if (needsEmitter()) {
     util.inherits(this.VirtualPin, events.EventEmitter);
