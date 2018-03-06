@@ -356,6 +356,38 @@ var Blynk = function(auth, options) {
       self.sendMsg(MsgType.HW, ['vw', this.pin, 'p', x, y, val]);
     };
   };
+  
+  this.WidgetTable = function(vPin) {
+    this.pin = vPin;
+
+    this.clear = function() {
+      self.virtualWrite(this.pin, 'clr');
+    };
+    
+    this.add_row = function(id, name, value) {
+      self.virtualWrite(this.pin, ['add', id, name, value]);
+    };
+    
+    this.update_row = function(id, name, value) {
+	  self.virtualWrite(this.pin, ['update', id, name, value]);
+    };
+
+    this.highlight_row = function(id) {
+      self.virtualWrite(this.pin, ['pick', id]);
+    };
+
+    this.select_row = function(id) {
+      self.virtualWrite(this.pin, ['select', id]);
+    };
+
+    this.deselect_row = function(id) {
+      self.virtualWrite(this.pin, ['deselect', id]);
+    };
+
+    this.move_row = function(old_row, new_row) {
+      self.virtualWrite(this.pin, ['order', old_row, new_row]);
+    };
+  };
 
   this.WidgetLED = function(vPin) {
     this.pin = vPin;
