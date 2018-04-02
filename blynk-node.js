@@ -22,7 +22,7 @@ exports.TcpClient = function(options) {
 
   var options = options || {};
   self.addr = options.addr || "blynk-cloud.com";
-  self.port = options.port || 8442;
+  self.port = options.port || 80;
 
   var net = require('net');
 
@@ -78,7 +78,7 @@ exports.TcpServer = function(options) {
 
   var options = options || {};
   self.addr = options.addr || '0.0.0.0';
-  self.port = options.port || 8442;
+  self.port = options.port || 80;
 
   var net = require('net');
 

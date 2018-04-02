@@ -128,7 +128,7 @@ if (isEspruino()) {
 
     var options = options || {};
     self.addr = options.addr || "blynk-cloud.com";
-    self.port = options.port || 8442;
+    self.port = options.port || 80;
 
     var net = require('net');
 

@@ -50,7 +50,7 @@ var BlynkState = {
 
     var options = options || {};
     self.addr = options.addr || "blynk-cloud.com";
-    self.port = options.port || 8442;
+    self.port = options.port || 80;
 
     var net = require('net');
 
@@ -338,9 +338,11 @@ Blynk.prototype.sendRsp = function(msg_type, msg_id, msg_len, data) {
 };
 
 Blynk.prototype.sendMsg = function(msg_type, values, msg_id) {
-  var values = values || [''];
-  var data = values.join('\0');
-  this.sendRsp(msg_type, msg_id, data.length, data);
+  if (this.timerHb) {
+    var values = values || [''];
+    var data = values.join('\0');
+    this.sendRsp(msg_type, msg_id, data.length, data);
+  }
 };
 
 /*
