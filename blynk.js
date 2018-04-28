@@ -79,6 +79,111 @@ var BlynkState = {
   DISCONNECTED  :  3
 };
 
+
+/* 
+* function from node-red-contrib-blynk-ws 
+*/
+
+function getKeyByValue(obj, value) {
+  //return Object.keys(obj).find(key => obj[key] === value); //javascript ES6 only
+  return Object.keys(obj).filter(function(key) {return obj[key] === value;})[0];
+}
+
+function getCommandByCode(cmd) {
+  var key = getKeyByValue(MsgType, cmd);
+  if(key !== undefined ) return key;
+  else return cmd;
+}
+
+function getStatusByCode(statusCode) {
+  var key = getKeyByValue(MsgStatus, statusCode);
+  if(key !== undefined ) return key;
+  else return statusCode; 
+}
+
+/* return a full decoded message for debug */
+function messageToDebugString(data) {
+  var msgCount = 0;
+  var dbgStr= "";
+
+  while(data.length>0) {
+    msgCount++;
+    var cmd = decodeCommand(data);
+    data=data.substr(cmd.msgLength); //remove current message from data
+    if(msgCount>1)  dbgStr = dbgStr + "\n" + commandToDebugString(cmd);
+    else dbgStr = commandToDebugString(cmd);
+  }
+  if(msgCount>1) return "Multiple Command, num: "+msgCount + "\n"+ dbgStr;
+  else return dbgStr;
+}
+
+/* return a decoded command for debug */
+function commandToDebugString(cmd) {
+  var dbgStr= "";
+  if (cmd.type !== MsgType.RSP ) {
+    var logdata = cmd.body;
+    if (cmd.type === MsgType.LOGIN) logdata = String("********************************" + cmd.body.slice(-5)).slice(-32);
+    if (cmd.type === MsgType.BRIDGE) {
+      var values = cmd.body.split("\0");
+      if(values.length == 3 && values[1] == "i") {
+        logdata = values[0]+"\0"+values[1]+"\0"+String("********************************" + values[2].slice(-5)).slice(-32);
+      }
+    }
+    dbgStr="Cmd: " + cmd.typeString + ", Id: " + cmd.msgId + ", len: " + cmd.len + ", data: " + JSON.stringify(logdata.replace(new RegExp("\u0000", "g"),"|"));
+  }
+  else {
+    dbgStr="Cmd: " + cmd.typeString + ", Id: " + cmd.msgId + ", responseCode: " + getStatusByCode(cmd.len);
+  }
+  return dbgStr;
+}
+
+/* decode a single blynk command */
+function decodeCommand(data) {
+  var cmd = {};
+
+  cmd.type = data.charCodeAt(0);
+  cmd.typeString = getCommandByCode(cmd.type);
+  cmd.msgId = data.charCodeAt(1) << 8 | data.charCodeAt(2);
+  cmd.len = data.charCodeAt(3) << 8 | data.charCodeAt(4);
+  cmd.msgLength = 5;
+
+  switch(cmd.type) {
+  case MsgType.HW:
+  case MsgType.BRIDGE:
+    cmd.body = data.substr(5, cmd.len);
+    cmd.msgLength = cmd.msgLength + cmd.len;
+
+    if (cmd.body !== "") {
+      var values = cmd.body.split("\0");
+      if (values.length > 1) {
+        cmd.operation = values[0];
+        cmd.pin = values[1];
+        if (values.length > 2) {
+          cmd.value = values[2];
+          //we have an array of cmds, return array as well
+          cmd.array = values.slice(2, values.length);
+        }
+      }
+      else if (values.length == 1)  { ///handle "pm" single message
+        cmd.operation = values[0];
+      }
+    }
+    break;
+  case MsgType.RSP:
+    cmd.status = data.charCodeAt(3) << 8 | data.charCodeAt(4);
+    break;
+  default:
+    cmd.body = data.substr(5, cmd.len);
+    cmd.msgLength = cmd.msgLength + cmd.len;
+    break;
+  }
+
+  return cmd;
+}
+
+/* end function from node-red-contrib-blynk-ws  */
+
+
 if (isBrowser()) {
   var bl_browser = require('./blynk-browser.js');
   var events = require('events');
@@ -261,6 +366,9 @@ var Blynk = function(auth, options) {
     events.EventEmitter.call(this);
   }
 
+  this.debug = false; //if true enable protocol log use "Debug" to activate
+  
+
   this.auth = auth;
   var options = options || {};
   this.heartbeat = options.heartbeat || (10*1000);
@@ -304,6 +412,11 @@ var Blynk = function(auth, options) {
   this.msg_id = 1;
   this.vpins = [];
   this.profile = options.profile;
+
+  this.Debug = function(debug) {
+    if(debug == undefined) debug = true;
+    self.debug = debug;
+  };
 
   this.VirtualPin = function(vPin) {
     if (needsEmitter()) {
@@ -390,6 +503,9 @@ Blynk.prototype.onReceive = function(data) {
   var self = this;
   self.buff_in += data;
   while (self.buff_in.length >= 5) {
+    if(self.debug) {
+      console.log("RECV <- " + messageToDebugString(self.buff_in));
+    }
     var msg_type = self.buff_in.charCodeAt(0);
     var msg_id   = self.buff_in.charCodeAt(1) << 8 | self.buff_in.charCodeAt(2);
     var msg_len  = self.buff_in.charCodeAt(3) << 8 | self.buff_in.charCodeAt(4);
@@ -511,7 +627,9 @@ Blynk.prototype.sendRsp = function(msg_type, msg_id, msg_len, data) {
     }*/
     data = blynkHeader(msg_type, msg_id, msg_len) + data;
   }
-
+  if(self.debug) {
+    console.log("SEND -> " + messageToDebugString(data));
+  }
   self.conn.write(data)
 
   // TODO: track also recieving time
