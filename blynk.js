@@ -5,6 +5,10 @@
 var C = {
 };
 
+/* library version */
+var BLYNK_VERSION = '0.4.7';
+var BLYNK_INFO_DEVICE = '';
+
 /*
  * Helpers
  */
@@ -269,6 +273,7 @@ if (isEspruino()) {
 
   var BoardEspruinoPico = function(values) {
     var self = this;
+    this.name = "EspruinoPico";
     this.init = function(blynk) {
       self.blynk = blynk;
     };
@@ -306,6 +311,7 @@ if (isEspruino()) {
 
   var BoardEspruinoLinux = function(values) {
     var self = this;
+    this.name = "EspruinoLinux";
     this.init = function(blynk) {
       self.blynk = blynk;
     };
@@ -340,6 +346,7 @@ if (isEspruino()) {
  */
 
 var BoardDummy = function() {
+  this.name = "BoardDummy";
   this.init = function(blynk) {};
   this.process = function(values) {
     switch (values[0]) {
@@ -373,13 +380,18 @@ var Blynk = function(auth, options) {
   var options = options || {};
   this.heartbeat = options.heartbeat || (10*1000);
 
+  if(options.logo != undefined) this.logo = options.logo
+
   // Auto-detect board
   if (options.board) {
     this.board = options.board;
+    BLYNK_INFO_DEVICE += options.board + ' - ';
   } else if (isEspruino()) {
     this.board = new BoardEspruinoPico();
+    BLYNK_INFO_DEVICE += 'EspruinoPico - ';
   } else if (isBrowser()) {
     this.board = new BoardDummy();
+    BLYNK_INFO_DEVICE += 'Dummy - ';
   } else {
     [
         bl_node.BoardMRAA,
@@ -388,6 +400,8 @@ var Blynk = function(auth, options) {
     ].some(function(b){
       try {
         self.board = new b();
+        
+        BLYNK_INFO_DEVICE += self.board.name + ' - ';
         return true;
       }
       catch (e) {
@@ -400,12 +414,16 @@ var Blynk = function(auth, options) {
   // Auto-detect connector
   if (options.connector) {
     this.conn = options.connector;
+    BLYNK_INFO_DEVICE += options.connector.name;
   } else if (isEspruino()) {
     this.conn = new EspruinoTCP(options);
+    BLYNK_INFO_DEVICE += 'Espruino TCP';
   } else if (isBrowser()) {
     this.conn = new bl_browser.WsClient(options);
+    BLYNK_INFO_DEVICE += 'Browser WS';
   } else {
     this.conn = new bl_node.SslClient(options);
+    BLYNK_INFO_DEVICE += 'NodeJS Wss';
   }
 
   this.buff_in = '';
@@ -484,6 +502,32 @@ var Blynk = function(auth, options) {
     };
   };
 
+  var logo = '';
+  if (self.logo == 'NO_FANCY_LOGO') {
+    logo = "\nBlynk JS v" + BLYNK_VERSION + " on " + BLYNK_INFO_DEVICE;
+  }
+  else if(self.logo == 'FANCY_LOGO_3D') {
+     logo = "\n" + 
+            "   ____     ___                      __\n" +
+            "  /\\  _`\\  /\\_ \\                    /\\ \\  _\n" +
+            "  \\ \\ \\_\\ \\\\//\\ \\    __  __     ___ \\ \\ \\/ \\\n" +
+            "   \\ \\  _ <  \\ \\ \\  /\\ \\/\\ \\  /' _ `\\\\ \\ , <\n" +
+            "    \\ \\ \\_\\ \\ \\_\\ \\_\\ \\ \\_\\ \\ /\\ \\/\\ \\\\ \\ \\\\`\\\n" +
+            "     \\ \\____/ /\\____\\\\/`____ \\\\ \\_\\ \\_\\\\ \\_\\\\_\\\n" +
+            "      \\/___/  \\/____/ `/___/\\ \\\\/_/\\/_/ \\/_//_/\n" +
+            "                         /\\___/\n" +
+            "                         \\/__/   JS v" + BLYNK_VERSION + " on " + BLYNK_INFO_DEVICE + "\n";
+  }
+  else {
+     logo = "\n" +
+            "    ___  __          __\n" +
+            "   / _ )/ /_ _____  / /__\n" +
+            "  / _  / / // / _ \\/  '_/\n" +
+            " /____/_/\\_, /_//_/_/\\_\\\n" +
+            "        /___/ JS v" + BLYNK_VERSION + " on " + BLYNK_INFO_DEVICE + "\n";
+  }
+  console.log(logo);
+
   if (needsEmitter()) {
     util.inherits(this.VirtualPin, events.EventEmitter);
     util.inherits(this.WidgetBridge, events.EventEmitter);
@@ -524,7 +568,7 @@ Blynk.prototype.onReceive = function(data) {
               self.sendMsg(MsgType.PING);
             }, self.heartbeat);
             console.log('Authorized');
-            self.sendMsg(MsgType.INTERNAL, ['ver', '0.4.7', 'dev', 'js']);
+            self.sendMsg(MsgType.INTERNAL, ['ver', BLYNK_VERSION, 'dev', 'js']);
             self.emit('connect');
           } else {
             console.log('Could not login:', string_of_enum(MsgStatus, msg_len));
