@@ -7,6 +7,7 @@ var AUTH = 'YOUR_AUTH_TOKEN';
 var blynk = new Blynk.Blynk(AUTH, options = {
   connector : new Blynk.TcpClient( options = { addr:"127.0.0.1", port:8442 } )
 });
+//blynk.Debug(); //remove comment to enable Protocol Log
 
 var v1 = new blynk.VirtualPin(1);
 var v9 = new blynk.VirtualPin(9);

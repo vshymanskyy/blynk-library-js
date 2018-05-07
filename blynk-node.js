@@ -19,6 +19,7 @@ var MsgType = {
 exports.TcpClient = function(options) {
   var self = this;
   events.EventEmitter.call(this);
+  this.name = 'TcpClient';
 
   var options = options || {};
   self.addr = options.addr || "blynk-cloud.com";
@@ -75,6 +76,7 @@ util.inherits(exports.TcpClient, events.EventEmitter);
 exports.TcpServer = function(options) {
   var self = this;
   events.EventEmitter.call(this);
+  this.name = 'TcpServer';
 
   var options = options || {};
   self.addr = options.addr || '0.0.0.0';
@@ -128,6 +130,7 @@ util.inherits(exports.TcpServer, events.EventEmitter);
 exports.SslClient = function(options) {
   var self = this;
   events.EventEmitter.call(this);
+  this.name = 'SslClient';
   
   var options = options || {};
   var certs_path = options.certs_path || default_certs_path;
@@ -240,6 +243,7 @@ util.inherits(exports.SslClient, events.EventEmitter);
 exports.SslServer = function(options) {
   var self = this;
   events.EventEmitter.call(this);
+  this.name = 'SslServer';
 
   var options = options || {};
   var certs_path = options.certs_path || default_certs_path;
@@ -307,6 +311,7 @@ var scale = function(value, inMin, inMax, outMin, outMax) {
 
 exports.BoardMRAA = function() {
   var self = this;
+  this.name = 'MRAA';
   var mraa = require('mraa');
   console.log('MRAA Version: ' + mraa.getVersion());
   this.init = function(blynk) {
@@ -346,6 +351,7 @@ exports.BoardMRAA = function() {
 exports.BoardOnOff = function() {
   var self = this;
   var Gpio;
+  this.name = 'OnOff';
   try {
     Gpio = require('onoff').Gpio;
     console.log("OnOff mode");

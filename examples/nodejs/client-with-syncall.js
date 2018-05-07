@@ -4,6 +4,7 @@ var AUTH = 'YOUR_AUTH_TOKEN';
 
 var BlynkLib = require('blynk-library');
 var blynk = new BlynkLib.Blynk(AUTH);
+//blynk.Debug(); //remove comment to enable Protocol Log
 var v1 = new blynk.VirtualPin(1);
 
 v1.on('write', function(param) {
