@@ -9,7 +9,10 @@
 Implementations for other platforms:
 * [Arduino](https://github.com/blynkkk/blynk-library)
 * [Particle](https://github.com/vshymanskyy/blynk-library-spark)
-* [MicroPython WiPy](https://github.com/wipy/wipy/tree/master/lib/blynk)
+* [Python, MicroPython](https://github.com/vshymanskyy/blynk-library-python)
+* [OpenWrt](https://github.com/vshymanskyy/blynk-library-openwrt)
+* [MBED](https://developer.mbed.org/users/vshymanskyy/code/Blynk/)
+* [Node-RED](https://www.npmjs.com/package/node-red-contrib-blynk-ws)
 
 __________
 
