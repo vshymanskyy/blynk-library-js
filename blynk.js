@@ -63,7 +63,9 @@ var MsgType = {
   HW            :  20,
 
   REDIRECT      :  41,
-  DEBUG_PRINT   :  55
+  DEBUG_PRINT   :  55,
+
+  EVENT_LOG     :  64,
 };
 
 var MsgStatus = {
@@ -408,7 +410,7 @@ Blynk.prototype.onReceive = function(data) {
               self.sendMsg(MsgType.PING);
             }, self.heartbeat);
             console.log('Authorized');
-            self.sendMsg(MsgType.INTERNAL, ['ver', '0.4.7', 'dev', 'js']);
+            self.sendMsg(MsgType.INTERNAL, ['ver', '0.5.2', 'buff-in', 4096, 'dev', 'js']);
             self.emit('connect');
           } else {
             console.log('Could not login:', string_of_enum(MsgStatus, msg_len));
@@ -432,7 +434,7 @@ Blynk.prototype.onReceive = function(data) {
       continue;
     }
 
-    if (msg_len > 1024)  { return self.disconnect(); }
+    if (msg_len > 4096)  { return self.disconnect(); }
     if (self.buff_in.length < msg_len+5) {
       return;
     }
@@ -488,7 +490,7 @@ Blynk.prototype.onReceive = function(data) {
                msg_type === MsgType.DEACTIVATE ||
                msg_type === MsgType.REFRESH)
     {
-      // these make no sence...
+      // these make no sense...
     } else {
       console.log('Invalid msg type: ', msg_type);
       self.sendRsp(MsgType.RSP, msg_id, MsgStatus.ILLEGAL_COMMAND);
@@ -611,6 +613,9 @@ Blynk.prototype.setProperty = function(pin, prop, val) {
   this.sendMsg(MsgType.PROPERTY, [pin, prop].concat(val));
 };
 
+Blynk.prototype.eventLog = function(name, descr) {
+  this.sendMsg(MsgType.EVENT_LOG, [name].concat(descr));
+};
 
 Blynk.prototype.syncAll = function() {
   this.sendMsg(MsgType.HW_SYNC);
