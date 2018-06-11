@@ -267,15 +267,15 @@ var Blynk = function(auth, options) {
   var options = options || {};
   this.heartbeat = options.heartbeat || (10*1000);
 
-  console.log(`
-    ___  __          __
-   / _ )/ /_ _____  / /__
-  / _  / / // / _ \\/  '_/
- /____/_/\\_, /_//_/_/\\_\\
-        /___/
-
-  Give Blynk a Github star! => https://github.com/vshymanskyy/blynk-library-js
-`);
+  console.log("\
+    ___  __          __\
+   / _ )/ /_ _____  / /__\
+  / _  / / // / _ \\/  '_/\
+ /____/_/\\_, /_//_/_/\\_\\\
+        /___/\
+\
+  Give Blynk a Github star! => https://github.com/vshymanskyy/blynk-library-js\
+");
 
   // Auto-detect board
   if (options.board) {
@@ -420,7 +420,7 @@ Blynk.prototype.onReceive = function(data) {
               self.sendMsg(MsgType.PING);
             }, self.heartbeat);
             console.log('Authorized');
-            self.sendMsg(MsgType.INTERNAL, ['ver', '0.5.2', 'buff-in', 4096, 'dev', 'js']);
+            self.sendMsg(MsgType.INTERNAL, ['ver', '0.5.3', 'buff-in', 4096, 'dev', 'js']);
             self.emit('connect');
           } else {
             console.log('Could not login:', string_of_enum(MsgStatus, msg_len));

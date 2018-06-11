@@ -243,7 +243,7 @@ Blynk.prototype.onReceive = function(data) {
               self.sendMsg(MsgType.PING);
             }, self.heartbeat);
             console.log('Authorized');
-            self.sendMsg(MsgType.INTERNAL, ['ver', '0.5.2', 'buff-in', 256, 'dev', 'espruino']);
+            self.sendMsg(MsgType.INTERNAL, ['ver', '0.5.3', 'buff-in', 256, 'dev', 'espruino']);
             self.emit('connect');
           } else {
             //if invalid token, no point in trying to reconnect
