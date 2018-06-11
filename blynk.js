@@ -267,14 +267,14 @@ var Blynk = function(auth, options) {
   var options = options || {};
   this.heartbeat = options.heartbeat || (10*1000);
 
-  console.log("\
-    ___  __          __\
-   / _ )/ /_ _____  / /__\
-  / _  / / // / _ \\/  '_/\
- /____/_/\\_, /_//_/_/\\_\\\
-        /___/\
-\
-  Give Blynk a Github star! => https://github.com/vshymanskyy/blynk-library-js\
+  console.log("\n\
+    ___  __          __\n\
+   / _ )/ /_ _____  / /__\n\
+  / _  / / // / _ \\/  '_/\n\
+ /____/_/\\_, /_//_/_/\\_\\\n\
+        /___/\n\
+\n\
+  Give Blynk a Github star! => https://github.com/vshymanskyy/blynk-library-js\n\
 ");
 
   // Auto-detect board
