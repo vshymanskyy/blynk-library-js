@@ -1918,7 +1918,16 @@ Blynk.prototype.onReceive = function(data) {
 Blynk.prototype.sendRsp = function(msg_type, msg_id, msg_len, data) {
   var self = this;
   data = data || "";
-  msg_id = msg_id || (self.msg_id++);
+
+  if (!msg_id) {
+    if (self.msg_id === 0xFFFF)
+        self.msg_id = 1;
+    else
+        self.msg_id++;
+
+    msg_id = self.msg_id;
+  }
+
   if (msg_type == MsgType.RSP) {
     //console.log('< ', string_of_enum(MsgType, msg_type), msg_id, string_of_enum(MsgStatus, msg_len));
     data = blynkHeader(msg_type, msg_id, msg_len)
