@@ -4,7 +4,7 @@
 [![GitHub issues](https://img.shields.io/github/issues/vshymanskyy/blynk-library-js.svg)](https://github.com/vshymanskyy/blynk-library-js/issues)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/vshymanskyy/blynk-library-js)
 
-[![NPM](https://nodei.co/npm/blynk-library.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/blynk-library/)
+[![NPM](https://nodei.co/npm/blynk-library.svg?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/blynk-library/)
 
 Implementations for other platforms:
 * [Arduino](https://github.com/blynkkk/blynk-library)
