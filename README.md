@@ -4,16 +4,6 @@
 [![GitHub issues](https://img.shields.io/github/issues/vshymanskyy/blynk-library-js.svg)](https://github.com/vshymanskyy/blynk-library-js/issues)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/vshymanskyy/blynk-library-js)
 
-Implementations for other platforms:
-* [Arduino](https://github.com/blynkkk/blynk-library)
-* [Particle](https://github.com/vshymanskyy/blynk-library-spark)
-* [Python, MicroPython](https://github.com/vshymanskyy/blynk-library-python)
-* [OpenWrt](https://github.com/vshymanskyy/blynk-library-openwrt)
-* [MBED](https://developer.mbed.org/users/vshymanskyy/code/Blynk/)
-* [Node-RED](https://www.npmjs.com/package/node-red-contrib-blynk-ws)
-
-__________
-
 # blynk-library-js
 Blynk library implementation for JavaScript (Node.js, Espruino)
 
@@ -66,3 +56,11 @@ v9.on('read', function() {
 * OpenWrt + Espruino package
 
 Just install the required package and this module will do auto-detection.
+__________
+Implementations for other platforms:
+* [Arduino](https://github.com/blynkkk/blynk-library)
+* [Particle](https://github.com/vshymanskyy/blynk-library-spark)
+* [Python, MicroPython](https://github.com/vshymanskyy/blynk-library-python)
+* [OpenWrt](https://github.com/vshymanskyy/blynk-library-openwrt)
+* [MBED](https://developer.mbed.org/users/vshymanskyy/code/Blynk/)
+* [Node-RED](https://www.npmjs.com/package/node-red-contrib-blynk-ws)
