@@ -60,6 +60,7 @@ __________
 Implementations for other platforms:
 * [Arduino](https://github.com/blynkkk/blynk-library)
 * [Particle](https://github.com/vshymanskyy/blynk-library-spark)
+* [Lua, NodeMCU](https://github.com/vshymanskyy/blynk-library-lua)
 * [Python, MicroPython](https://github.com/vshymanskyy/blynk-library-python)
 * [OpenWrt](https://github.com/vshymanskyy/blynk-library-openwrt)
 * [MBED](https://developer.mbed.org/users/vshymanskyy/code/Blynk/)
