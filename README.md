@@ -7,8 +7,6 @@ Blynk library implementation for JavaScript (Node.js, Espruino)
 [![GitHub issues](https://img.shields.io/github/issues/vshymanskyy/blynk-library-js.svg)](https://github.com/vshymanskyy/blynk-library-js/issues)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/vshymanskyy/blynk-library-js)
 
-[![NPM](https://nodei.co/npm/blynk-library.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/blynk-library/)
-
 If you like **Blynk** - give it a star, or fork it and contribute! 
 [![GitHub stars](https://img.shields.io/github/stars/blynkkk/blynk-library.svg?style=social&label=Star)](https://github.com/blynkkk/blynk-library/stargazers) 
 [![GitHub forks](https://img.shields.io/github/forks/blynkkk/blynk-library.svg?style=social&label=Fork)](https://github.com/blynkkk/blynk-library/network)

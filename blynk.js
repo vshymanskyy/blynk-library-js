@@ -368,6 +368,38 @@ var Blynk = function(auth, options) {
       self.sendMsg(MsgType.HW, ['vw', this.pin, 'p', x, y, val]);
     };
   };
+  
+  this.WidgetTable = function(vPin) {
+    this.pin = vPin;
+
+    this.clear = function() {
+      self.virtualWrite(this.pin, 'clr');
+    };
+    
+    this.add_row = function(id, name, value) {
+      self.virtualWrite(this.pin, ['add', id, name, value]);
+    };
+    
+    this.update_row = function(id, name, value) {
+	  self.virtualWrite(this.pin, ['update', id, name, value]);
+    };
+
+    this.highlight_row = function(id) {
+      self.virtualWrite(this.pin, ['pick', id]);
+    };
+
+    this.select_row = function(id) {
+      self.virtualWrite(this.pin, ['select', id]);
+    };
+
+    this.deselect_row = function(id) {
+      self.virtualWrite(this.pin, ['deselect', id]);
+    };
+
+    this.move_row = function(old_row, new_row) {
+      self.virtualWrite(this.pin, ['order', old_row, new_row]);
+    };
+  };
 
   this.WidgetLED = function(vPin) {
     this.pin = vPin;
@@ -381,6 +413,15 @@ var Blynk = function(auth, options) {
     this.turnOff = function() {
       self.virtualWrite(this.pin, 0);
     };
+  };
+  
+  this.WidgetMAP = function(vPin) {
+    this.pin = vPin;
+    
+    this.location = function(index, lat, lon, value) {
+      var locationdata = [index, lat, lon, value]
+      self.virtualWrite(this.pin, locationdata);
+    }
   };
 
   if (needsEmitter()) {
@@ -511,7 +552,16 @@ Blynk.prototype.onReceive = function(data) {
 Blynk.prototype.sendRsp = function(msg_type, msg_id, msg_len, data) {
   var self = this;
   data = data || "";
-  msg_id = msg_id || (self.msg_id++);
+
+  if (!msg_id) {
+    if (self.msg_id === 0xFFFF)
+      self.msg_id = 1;
+    else
+      self.msg_id++;
+
+    msg_id = self.msg_id;
+  }
+
   if (msg_type == MsgType.RSP) {
     //console.log('< ', string_of_enum(MsgType, msg_type), msg_id, string_of_enum(MsgStatus, msg_len));
     data = blynkHeader(msg_type, msg_id, msg_len)
