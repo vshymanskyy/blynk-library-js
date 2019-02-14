@@ -1,10 +1,5 @@
-/* Copyright (c) 2015 Volodymyr Shymanskyy. See the file LICENSE for copying permission. */
-
-function string_of_enum(e,value) 
-{
-  for (var k in e) if (e[k] == value) return k;
-  return "Unknown(" + value + ")";
-}
+/* Copyright (c) 2015-2019 Volodymyr Shymanskyy. See the file LICENSE for copying permission. */
+'use strict';
 
 function blynkHeader(msg_type, msg_id, msg_len) {
   return String.fromCharCode(
@@ -16,7 +11,7 @@ function blynkHeader(msg_type, msg_id, msg_len) {
 
 var MsgType = {
   RSP           :  0,
-  LOGIN         :  2, //"token" or "mail pass"
+  LOGIN         :  2,
   PING          :  6,
   TWEET         :  12,
   EMAIL         :  13,
@@ -24,12 +19,14 @@ var MsgType = {
   BRIDGE        :  15,
   HW_SYNC       :  16,
   INTERNAL      :  17,
-  SMS           :  18,
   PROPERTY      :  19,
   HW            :  20,
+  HW_LOGIN      :  29,
 
   REDIRECT      :  41,
-  DEBUG_PRINT   :  55
+  DEBUG_PRINT   :  55,
+
+  EVENT_LOG     :  64,
 };
 
 var MsgStatus = {
@@ -130,7 +127,7 @@ var Blynk = function(auth, options) {
 
   this.auth = auth;
   var options = options || {};
-  this.heartbeat = options.heartbeat || (10*1000);
+  this.heartbeat = options.heartbeat || 10000;
 
   // Auto-detect board
   if (options.board) {
@@ -233,7 +230,7 @@ Blynk.prototype.onReceive = function(data) {
 
     if (msg_type === MsgType.RSP) {
       //console.log('> ', string_of_enum(MsgType, msg_type), msg_id, string_of_enum(MsgStatus, msg_len));
-      if (!self.profile) {
+
         if (self.timerConn && msg_id === 1) {
           if (msg_len === MsgStatus.OK || msg_len === MsgStatus.ALREADY_REGISTERED) {
             clearInterval(self.timerConn);
@@ -243,7 +240,7 @@ Blynk.prototype.onReceive = function(data) {
               self.sendMsg(MsgType.PING);
             }, self.heartbeat);
             console.log('Authorized');
-            self.sendMsg(MsgType.INTERNAL, ['ver', '0.5.3', 'buff-in', 256, 'dev', 'espruino']);
+            self.sendMsg(MsgType.INTERNAL, ['ver', '0.5.4', 'buff-in', 256, 'dev', 'espruino']);
             self.emit('connect');
           } else {
             //if invalid token, no point in trying to reconnect
@@ -261,7 +258,7 @@ Blynk.prototype.onReceive = function(data) {
             }
           }
         }
-      }
+
       self.buff_in = self.buff_in.substr(5);
       continue;
     }
@@ -370,17 +367,13 @@ Blynk.prototype.connect = function() {
       self.conn.on('data', function(data) { self.onReceive(data);     });
       self.conn.on('end',  function()     { self.end();               });
 
-      self.sendRsp(MsgType.LOGIN, 1, self.auth.length, self.auth);
+      self.sendRsp(MsgType.HW_LOGIN, 1, self.auth.length, self.auth);
     });
     self.conn.on('error', function(err) { self.error(err);            });
   };
 
-  if (self.profile) {
-    doConnect();
-  } else {
     self.timerConn = setInterval(doConnect, 10000);
     doConnect();
-  }
 };
 
 Blynk.prototype.disconnect = function(reconnect) {
@@ -431,6 +424,9 @@ Blynk.prototype.setProperty = function(pin, prop, val) {
   this.sendMsg(MsgType.PROPERTY, [pin, prop].concat(val));
 };
 
+Blynk.prototype.eventLog = function(name, descr) {
+  this.sendMsg(MsgType.EVENT_LOG, [name].concat(descr));
+};
 
 Blynk.prototype.syncAll = function() {
   this.sendMsg(MsgType.HW_SYNC);
@@ -451,10 +447,6 @@ Blynk.prototype.notify = function(message) {
 
 Blynk.prototype.tweet = function(message) {
   this.sendMsg(MsgType.TWEET, [message]);
-};
-
-Blynk.prototype.sms = function(message) {
-  this.sendMsg(MsgType.SMS, [message]);
 };
 
 exports.Blynk = Blynk;

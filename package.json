@@ -1,6 +1,6 @@
 {
   "name": "blynk-library",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "description": "Blynk library implementation for JavaScript (Node.js, Espruino)",
   "author": "Volodymyr Shymanskyy",
   "license": "MIT",
@@ -20,8 +20,7 @@
   "browser": {
     "./blynk-node.js": false
   },
-  "dependencies": {
-  },
+  "dependencies": {},
   "keywords": [
     "Arduino",
     "Espruino",

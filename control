@@ -1,5 +1,5 @@
 Package: blynk-library-js
-Version: 0.5.3
+Version: 0.5.4
 Description: Blynk library implementation for JavaScript (Node.js, Espruino)
 Section: extras
 Priority: optional
