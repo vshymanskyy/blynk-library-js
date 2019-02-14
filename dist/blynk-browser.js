@@ -1405,12 +1405,8 @@ util.inherits(exports.WsClient, events.EventEmitter);
 
 },{"events":3,"util":7}],9:[function(require,module,exports){
 (function (process){
-/* Copyright (c) 2015 Volodymyr Shymanskyy. See the file LICENSE for copying permission. */
-
+/* Copyright (c) 2015-2019 Volodymyr Shymanskyy. See the file LICENSE for copying permission. */
 'use strict';
-
-var C = {
-};
 
 /*
  * Helpers
@@ -1450,8 +1446,7 @@ function blynkHeader(msg_type, msg_id, msg_len) {
 
 var MsgType = {
   RSP           :  0,
-  REGISTER      :  1, //"mail pass"
-  LOGIN         :  2, //"token" or "mail pass"
+  LOGIN         :  2,
   SAVE_PROF     :  3,
   LOAD_PROF     :  4,
   GET_TOKEN     :  5,
@@ -1465,9 +1460,9 @@ var MsgType = {
   BRIDGE        :  15,
   HW_SYNC       :  16,
   INTERNAL      :  17,
-  SMS           :  18,
   PROPERTY      :  19,
   HW            :  20,
+  HW_LOGIN      :  29,
 
   REDIRECT      :  41,
   DEBUG_PRINT   :  55,
@@ -1672,7 +1667,7 @@ var Blynk = function(auth, options) {
 
   this.auth = auth;
   var options = options || {};
-  this.heartbeat = options.heartbeat || (10*1000);
+  this.heartbeat = options.heartbeat || 10000;
 
   console.log("\n\
     ___  __          __\n\
@@ -1868,7 +1863,7 @@ Blynk.prototype.onReceive = function(data) {
               self.sendMsg(MsgType.PING);
             }, self.heartbeat);
             console.log('Authorized');
-            self.sendMsg(MsgType.INTERNAL, ['ver', '0.5.3', 'buff-in', 4096, 'dev', 'js']);
+            self.sendMsg(MsgType.INTERNAL, ['ver', '0.5.4', 'buff-in', 4096, 'dev', 'js']);
             self.emit('connect');
           } else {
             console.log('Could not login:', string_of_enum(MsgStatus, msg_len));
@@ -2019,7 +2014,7 @@ Blynk.prototype.connect = function() {
       self.conn.on('data', function(data) { self.onReceive(data);     });
       self.conn.on('end',  function()     { self.end();               });
 
-      self.sendRsp(MsgType.LOGIN, 1, self.auth.length, self.auth);
+      self.sendRsp(MsgType.HW_LOGIN, 1, self.auth.length, self.auth);
     });
     self.conn.on('error', function(err) { self.error(err);            });
   };
@@ -2103,10 +2098,6 @@ Blynk.prototype.notify = function(message) {
 
 Blynk.prototype.tweet = function(message) {
   this.sendMsg(MsgType.TWEET, [message]);
-};
-
-Blynk.prototype.sms = function(message) {
-  this.sendMsg(MsgType.SMS, [message]);
 };
 
 if (typeof module !== 'undefined' && ('exports' in module)) {
