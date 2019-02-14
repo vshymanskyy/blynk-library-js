@@ -132,7 +132,7 @@ exports.SslClient = function(options) {
   var options = options || {};
   var certs_path = options.certs_path || default_certs_path;
   self.addr = options.addr || "blynk-cloud.com";
-  self.port = options.port || 8441;
+  self.port = options.port || 443;
   // These are necessary only if using the client certificate authentication
   self.key  = options.key  || null;
   self.cert = options.cert || null;
