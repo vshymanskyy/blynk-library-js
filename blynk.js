@@ -642,9 +642,12 @@ Blynk.prototype.disconnect = function(reconnect) {
   this.conn.removeAllListeners();
 
   //starting reconnect procedure if not already in connecting loop and reconnect is true
-  if(reconnect && !self.timerConn) {
+  if(reconnect && !self.timerConn && !self.timerConnStarted) {
     console.log("REARMING DISCONNECT");
-    setTimeout(function () {self.connect()}, 5000);
+    self.timerConnStarted = setTimeout(function () {
+      self.connect();
+      self.timerConnStarted = null;
+    }, 5000);
   }
 };
 
@@ -654,8 +657,11 @@ Blynk.prototype.error = function(err) {
   this.emit('error', err.code?err.code:'ERROR');
   console.error('Error', err.code);
   //starting reconnect procedure if not already in connecting loop
-  if(!self.timerConn) {
-    setTimeout(function () {self.connect()}, 5000);
+  if(!self.timerConn && !self.timerConnStarted) {
+    self.timerConnStarted = setTimeout(function () {
+      self.connect();
+      self.timerConnStarted = null;
+    }, 5000);
   }
 };
 
