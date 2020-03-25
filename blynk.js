@@ -534,9 +534,14 @@ Blynk.prototype.onReceive = function(data) {
       self.disconnect();
     } else if (msg_type === MsgType.DEBUG_PRINT) {
       console.log('Server: ', values[0]);
+    } else if (msg_type === MsgType.INTERNAL) {
+      //console.log('Internal: ', values[0]);
+      if (values[0] === 'acon') self.emit('app-connected');
+      if (values[0] === 'adis') self.emit('app-disconnected');
+      if (values[0] === 'rtc\0') {}; // not supported
+      if (values[0] === 'ota\0') {}; // not supported
     } else if (msg_type === MsgType.REGISTER ||
                msg_type === MsgType.SAVE_PROF ||
-               msg_type === MsgType.INTERNAL ||
                msg_type === MsgType.ACTIVATE ||
                msg_type === MsgType.DEACTIVATE ||
                msg_type === MsgType.REFRESH)
