@@ -1,3 +1,9 @@
+> [!IMPORTANT]
+> **This project has been archived and is no longer maintained.**  
+> No further updates or support will be provided.  
+> We recommend switching to the **Blynk MQTT API** for future development.  
+> You can explore some [useful examples here](https://github.com/Blynk-Technologies/Blynk-MQTT-Samples).
+
 # blynk-library-js
 Blynk library implementation for JavaScript (Node.js, Espruino)
 
